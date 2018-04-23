@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'reorderable_list.dart';
 
 void main() => runApp(new MyApp());
 
@@ -7,7 +8,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter Rerderable List',
       theme: new ThemeData(
         // This is the theme of your application.
         //
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new MyHomePage(title: 'Flutter Demo Home Page'),
+      home: new MyHomePage(title: 'Flutter Reorderable List'),
     );
   }
 }
@@ -42,68 +43,100 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class ItemData {
+  ItemData(this.title, this.key);
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  final String title;
+  final Key key;
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<ItemData> _items;
+
+  _MyHomePageState() {
+    _items = <ItemData>[
+      ItemData("Hello", new ValueKey(1)),
+      ItemData("Cruel", new ValueKey(2)),
+      ItemData("World", new ValueKey(3)),
+      ItemData("Whatever", new ValueKey(4)),
+      ItemData("Hello", new ValueKey(5)),
+      ItemData("Cruel", new ValueKey(6)),
+      ItemData("World", new ValueKey(7)),
+      ItemData("Whatever", new ValueKey(8)),
+      ItemData("Hello", new ValueKey(9)),
+      ItemData("Cruel", new ValueKey(10)),
+      ItemData("World", new ValueKey(11)),
+      ItemData("Whatever", new ValueKey(12)),
+      ItemData("Hello", new ValueKey(13)),
+      ItemData("Cruel", new ValueKey(14)),
+      ItemData("World", new ValueKey(15)),
+      ItemData("Whatever", new ValueKey(16)),
+      ItemData("Whatever", new ValueKey(17)),
+      ItemData("Hello", new ValueKey(18)),
+      ItemData("Cruel", new ValueKey(19)),
+      ItemData("World", new ValueKey(20)),
+      ItemData("Whatever", new ValueKey(21)),
+      ItemData("Whatever", new ValueKey(22)),
+      ItemData("Whatever", new ValueKey(23)),
+      ItemData("Hello", new ValueKey(24)),
+      ItemData("Cruel", new ValueKey(25)),
+      ItemData("World", new ValueKey(26)),
+      ItemData("Whatever", new ValueKey(27))
+    ];
   }
+
+  int _indexOfKey(Key key) {
+    for (int i = 0; i < _items.length; ++i) {
+      if (_items[i].key == key) return i;
+    }
+    return -1;
+  }
+
+  bool reorderCallback(Key item, Key newPosition) {
+    int draggingIndex = _indexOfKey(item);
+    int newPositionIndex = _indexOfKey(newPosition);
+
+    // if (newPositionIndex % 2 == 1)
+    //   return false;
+
+    final draggedItem = _items[draggingIndex];
+    setState(() {
+      debugPrint(
+          "Reordering " + item.toString() + " -> " + newPosition.toString());
+      _items.removeAt(draggingIndex);
+      _items.insert(newPositionIndex, draggedItem);
+    });
+    return true;
+  }
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: ReorderableList(
+            onReorder: this.reorderCallback,
+            child: ListView.builder(
+              itemCount: _items.length,
+              itemBuilder: (BuildContext c, index) => new Item(_items[index]),
+            )));
+  }
+}
+
+class Item extends StatelessWidget {
+  Item(this.itemData);
+
+  final ItemData itemData;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return new Scaffold(
-      appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: new Text(widget.title),
-      ),
-      body: new Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: new Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug paint" (press "p" in the console where you ran
-          // "flutter run", or select "Toggle Debug Paint" from the Flutter tool
-          // window in IntelliJ) to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new Text(
-              'You have pushed the button this many times:',
-            ),
-            new Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return ReorderableItem(
+        key: itemData.key,
+        child: Container(
+            decoration: BoxDecoration(color: Colors.white),
+            child: new Text(itemData.title,
+                style: Theme.of(context).textTheme.subhead),
+            padding:
+                new EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0)));
   }
 }
