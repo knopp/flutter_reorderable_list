@@ -10,14 +10,6 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'Flutter Rerderable List',
       theme: new ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
-        // counter didn't reset back to zero; the application is not restarted.
         dividerColor: new Color(0x50000000),
         primarySwatch: Colors.blue,
       ),
@@ -29,15 +21,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -48,6 +31,8 @@ class ItemData {
   ItemData(this.title, this.key);
 
   final String title;
+
+  // Each item in reorderable list needs stable and unique key
   final Key key;
 }
 
@@ -60,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _items.add(new ItemData("List Item " + i.toString(), new ValueKey(i)));
   }
 
+  // Returns index of item with given key
   int _indexOfKey(Key key) {
     for (int i = 0; i < _items.length; ++i) {
       if (_items[i].key == key) return i;
@@ -67,10 +53,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return -1;
   }
 
-  bool reorderCallback(Key item, Key newPosition) {
+  bool _reorderCallback(Key item, Key newPosition) {
     int draggingIndex = _indexOfKey(item);
     int newPositionIndex = _indexOfKey(newPosition);
 
+    // Uncomment to allow even target reorder possition
     // if (newPositionIndex % 2 == 1)
     //   return false;
 
@@ -83,6 +70,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
+  //
+  // Reordering works by having ReorderableList widget in hierarchy
+  // containing ReorderableItems widgets
+  //
+
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
@@ -91,11 +83,12 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Column(children: <Widget>[
           Expanded(
               child: ReorderableList(
-                  onReorder: this.reorderCallback,
+                  onReorder: this._reorderCallback,
                   child: ListView.builder(
                     itemCount: _items.length,
                     itemBuilder: (BuildContext c, index) => new Item(
                         data: _items[index],
+                        // first and last attributes affect border drawn during dragging
                         first: index == 0,
                         last: index == _items.length - 1),
                   )))
@@ -110,16 +103,22 @@ class Item extends StatelessWidget {
   final bool first;
   final bool last;
 
+  // Builds decoration for list item; During dragging we don't want top border on first item
+  // and bottom border on last item
   BoxDecoration _buildDecoration(BuildContext context, bool dragging) {
     return BoxDecoration(
         border: Border(
-            top: first && !dragging ? Divider.createBorderSide(context) : BorderSide.none,
-            bottom:
-                last && dragging ? BorderSide.none : Divider.createBorderSide(context)));
+            top: first && !dragging
+                ? Divider.createBorderSide(context) //
+                : BorderSide.none,
+            bottom: last && dragging
+                ? BorderSide.none //
+                : Divider.createBorderSide(context)));
   }
 
   Widget _buildChild(BuildContext context, bool dragging) {
     return Container(
+        // slightly transparent background white dragging (just like on iOS)
         decoration: BoxDecoration(color: dragging ? Color(0xD0FFFFFF) : Colors.white),
         child: Row(
           children: <Widget>[
@@ -133,6 +132,8 @@ class Item extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ReorderableItem(
-        key: data.key, childBuilder: _buildChild, decorationBuilder: _buildDecoration);
+        key: data.key, //
+        childBuilder: _buildChild,
+        decorationBuilder: _buildDecoration);
   }
 }
