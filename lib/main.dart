@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
         // "hot reload" (press "r" in the console where you ran "flutter run",
         // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
         // counter didn't reset back to zero; the application is not restarted.
+        dividerColor: new Color(0x50000000),
         primarySwatch: Colors.blue,
       ),
       home: new MyHomePage(title: 'Flutter Reorderable List'),
@@ -54,35 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List<ItemData> _items;
 
   _MyHomePageState() {
-    _items = <ItemData>[
-      ItemData("Hello", new ValueKey(1)),
-      ItemData("Cruel", new ValueKey(2)),
-      ItemData("World", new ValueKey(3)),
-      ItemData("Whatever", new ValueKey(4)),
-      ItemData("Hello", new ValueKey(5)),
-      ItemData("Cruel", new ValueKey(6)),
-      ItemData("World", new ValueKey(7)),
-      ItemData("Whatever", new ValueKey(8)),
-      ItemData("Hello", new ValueKey(9)),
-      ItemData("Cruel", new ValueKey(10)),
-      ItemData("World", new ValueKey(11)),
-      ItemData("Whatever", new ValueKey(12)),
-      ItemData("Hello", new ValueKey(13)),
-      ItemData("Cruel", new ValueKey(14)),
-      ItemData("World", new ValueKey(15)),
-      ItemData("Whatever", new ValueKey(16)),
-      ItemData("Whatever", new ValueKey(17)),
-      ItemData("Hello", new ValueKey(18)),
-      ItemData("Cruel", new ValueKey(19)),
-      ItemData("World", new ValueKey(20)),
-      ItemData("Whatever", new ValueKey(21)),
-      ItemData("Whatever", new ValueKey(22)),
-      ItemData("Whatever", new ValueKey(23)),
-      ItemData("Hello", new ValueKey(24)),
-      ItemData("Cruel", new ValueKey(25)),
-      ItemData("World", new ValueKey(26)),
-      ItemData("Whatever", new ValueKey(27))
-    ];
+    _items = new List();
+    for (int i = 0; i < 100; ++i)
+      _items.add(new ItemData("List Item " + i.toString(), new ValueKey(i)));
   }
 
   int _indexOfKey(Key key) {
@@ -101,8 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final draggedItem = _items[draggingIndex];
     setState(() {
-      debugPrint(
-          "Reordering " + item.toString() + " -> " + newPosition.toString());
+      debugPrint("Reordering " + item.toString() + " -> " + newPosition.toString());
       _items.removeAt(draggingIndex);
       _items.insert(newPositionIndex, draggedItem);
     });
@@ -114,29 +88,51 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: ReorderableList(
-            onReorder: this.reorderCallback,
-            child: ListView.builder(
-              itemCount: _items.length,
-              itemBuilder: (BuildContext c, index) => new Item(_items[index]),
-            )));
+        body: Column(children: <Widget>[
+          Expanded(
+              child: ReorderableList(
+                  onReorder: this.reorderCallback,
+                  child: ListView.builder(
+                    itemCount: _items.length,
+                    itemBuilder: (BuildContext c, index) => new Item(
+                        data: _items[index],
+                        first: index == 0,
+                        last: index == _items.length - 1),
+                  )))
+        ]));
   }
 }
 
 class Item extends StatelessWidget {
-  Item(this.itemData);
+  Item({this.data, this.first, this.last});
 
-  final ItemData itemData;
+  final ItemData data;
+  final bool first;
+  final bool last;
+
+  BoxDecoration _buildDecoration(BuildContext context, bool dragging) {
+    return BoxDecoration(
+        border: Border(
+            top: first && !dragging ? Divider.createBorderSide(context) : BorderSide.none,
+            bottom:
+                last && dragging ? BorderSide.none : Divider.createBorderSide(context)));
+  }
+
+  Widget _buildChild(BuildContext context, bool dragging) {
+    return Container(
+        decoration: BoxDecoration(color: dragging ? Color(0xD0FFFFFF) : Colors.white),
+        child: Row(
+          children: <Widget>[
+            Expanded(child: Text(data.title, style: Theme.of(context).textTheme.subhead)),
+            Icon(Icons.reorder, color: dragging ? Color(0xFF555555) : Color(0xFF888888)),
+          ],
+        ),
+        padding: new EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0));
+  }
 
   @override
   Widget build(BuildContext context) {
     return ReorderableItem(
-        key: itemData.key,
-        child: Container(
-            decoration: BoxDecoration(color: Colors.white),
-            child: new Text(itemData.title,
-                style: Theme.of(context).textTheme.subhead),
-            padding:
-                new EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0)));
+        key: data.key, childBuilder: _buildChild, decorationBuilder: _buildDecoration);
   }
 }

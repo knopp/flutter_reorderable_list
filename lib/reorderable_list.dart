@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
 
 import 'dart:collection';
@@ -60,9 +61,10 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
       widget.scrollController ?? PrimaryScrollController.of(context);
 
   void _dragDown(DragDownDetails details) {
+    HapticFeedback.selectionClick();
     final draggedItem = _items[_dragging];
     draggedItem.update();
-    _dragProxy.setWidget(Opacity(opacity: 0.9, child: draggedItem.widget.child),
+    _dragProxy.setWidget(draggedItem.widget.childBuilder(draggedItem.context, true),
         draggedItem.context.findRenderObject());
   }
 
@@ -76,23 +78,34 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
     if (!_scrolling && _scrollController != null && _dragging != null) {
       final position = this._scrollController.position;
       double newOffset;
-      int duration = 100; // in ms
-      double step = 10.0;
+      int duration = 14; // in ms
+      double step = 1.0;
+      double overdragMax = 20.0;
+      double overdragCoef = 10.0;
 
-      if (_dragProxy.offset < 0 && position.pixels > position.minScrollExtent) {
-        newOffset = max(position.minScrollExtent, position.pixels - step);
-      } else if (_dragProxy.offset + _dragProxy.height > context.size.height &&
+      MediaQueryData d = MediaQuery.of(context, nullOk: true);
+
+      double top = d?.padding?.top ?? 0.0;
+      double bottom = context.size.height - (d?.padding?.bottom ?? 0.0);
+
+      if (_dragProxy.offset < top && position.pixels > position.minScrollExtent) {
+        final overdrag = max(top - _dragProxy.offset, overdragMax);
+        newOffset = max(
+            position.minScrollExtent, position.pixels - step * overdrag / overdragCoef);
+      } else if (_dragProxy.offset + _dragProxy.height > bottom &&
           position.pixels < position.maxScrollExtent) {
-        newOffset = min(position.maxScrollExtent, position.pixels + step);
+        final overdrag =
+            max<double>(_dragProxy.offset + _dragProxy.height - bottom, overdragMax);
+        newOffset = min(
+            position.maxScrollExtent, position.pixels + step * overdrag / overdragCoef);
       }
 
-      if (newOffset != null) {
+      if (newOffset != null && (newOffset - position.pixels).abs() >= 1.0) {
         _scrolling = true;
         await this._scrollController.animateTo(newOffset,
             duration: Duration(milliseconds: duration), curve: Curves.linear);
         _scrolling = false;
-        if (_dragging != null)
-        {
+        if (_dragging != null) {
           checkDragPosition();
           maybeScroll();
         }
@@ -107,14 +120,14 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
   }
 
   _dragEnd(DragEndDetails details) async {
-
+    HapticFeedback.selectionClick();
     if (_scrolling) {
       var prevDragging = _dragging;
       _dragging = null;
       SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         _dragging = prevDragging;
         _dragEnd(details);
-      }); 
+      });
       return;
     }
 
@@ -225,6 +238,7 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
       _lastReportedKey = closest.key;
       if (widget.onReorder != null) {
         if (widget.onReorder(_dragging, closest.key)) {
+          HapticFeedback.selectionClick();
           for (final f in onReorderApproved) {
             f();
           }
@@ -312,14 +326,23 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
       c.dispose();
     }
     _scrolling = null;
+    _recognizer?.dispose();
     super.dispose();
   }
 }
 
-class ReorderableItem extends StatefulWidget {
-  ReorderableItem({@required this.child, @required Key key}) : super(key: key);
+typedef BoxDecoration ReorderableItemDecorationBuilder(
+    BuildContext context, bool dragging);
 
-  final Widget child;
+typedef Widget ReorderableItemChildBuilder(BuildContext context, bool dragging);
+
+class ReorderableItem extends StatefulWidget {
+  ReorderableItem(
+      {@required Key key, @required this.childBuilder, this.decorationBuilder})
+      : super(key: key);
+
+  final ReorderableItemDecorationBuilder decorationBuilder;
+  final ReorderableItemChildBuilder childBuilder;
 
   @override
   createState() => new _ReorderableItemState();
@@ -340,7 +363,14 @@ class _ReorderableItemState extends State<ReorderableItem> {
         child: Transform(
             transform:
                 new Matrix4.translationValues(0.0, _listState.itemTranslation(key), 0.0),
-            child: Opacity(opacity: dragging ? 0.0 : 1.0, child: widget.child)));
+            child: DecoratedBox(
+                position: DecorationPosition.foreground,
+                decoration: widget.decorationBuilder != null
+                    ? widget.decorationBuilder(context, dragging)
+                    : BoxDecoration(),
+                child: Opacity(
+                    opacity: dragging ? 0.0 : 1.0,
+                    child: widget.childBuilder(context, dragging)))));
   }
 
   void _routePointer(PointerEvent event) {
