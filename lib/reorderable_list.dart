@@ -374,9 +374,11 @@ class _ReorderableItemState extends State<ReorderableItem> {
   }
 
   void _routePointer(PointerEvent event) {
+    // TODO - this needs to be factored out and made more flexible
     RenderBox ro = this.context.findRenderObject();
+    final query = MediaQuery.of(context);
     Offset point = ro.globalToLocal(event.position);
-    if (point.dx > ro.size.width - 60) {
+    if (point.dx > ro.size.width - 60 - (query?.padding?.right ?? 0.0)) {
       _listState.startDragging(key, event);
     }
   }

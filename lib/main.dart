@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int draggingIndex = _indexOfKey(item);
     int newPositionIndex = _indexOfKey(newPosition);
 
-    // Uncomment to allow even target reorder possition
+    // Uncomment to allow only even target reorder possition
     // if (newPositionIndex % 2 == 1)
     //   return false;
 
@@ -120,12 +120,17 @@ class Item extends StatelessWidget {
     return Container(
         // slightly transparent background white dragging (just like on iOS)
         decoration: BoxDecoration(color: dragging ? Color(0xD0FFFFFF) : Colors.white),
-        child: Row(
-          children: <Widget>[
-            Expanded(child: Text(data.title, style: Theme.of(context).textTheme.subhead)),
-            Icon(Icons.reorder, color: dragging ? Color(0xFF555555) : Color(0xFF888888)),
-          ],
-        ),
+        child: SafeArea(
+            top: false,
+            bottom: false,
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                    child: Text(data.title, style: Theme.of(context).textTheme.subhead)),
+                Icon(Icons.reorder,
+                    color: dragging ? Color(0xFF555555) : Color(0xFF888888)),
+              ],
+            )),
         padding: new EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0));
   }
 
