@@ -72,6 +72,11 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
     draggedItem.update();
     _dragProxy.setWidget(draggedItem.widget.childBuilder(draggedItem.context, true),
         draggedItem.context.findRenderObject());
+    this._scrollController.addListener(this._scrolled);
+  }
+
+  void _scrolled() {
+    checkDragPosition();
   }
 
   void _dragUpdate(DragUpdateDetails details) {
@@ -143,6 +148,8 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
       });
       return;
     }
+
+    this._scrollController.removeListener(this._scrolled);
 
     var current = _items[_dragging];
     if (current == null) return;
