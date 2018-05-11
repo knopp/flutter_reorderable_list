@@ -45,6 +45,12 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
     _finalAnimation?.dispose();
     _finalAnimation = null;
 
+    if (_dragging != null) {
+      var current = _items[_dragging];
+      _dragging = null;
+      current?.update();
+    }
+
     _dragging = key;
     _lastReportedKey = null;
     if (_recognizer == null) {
