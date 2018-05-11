@@ -25,7 +25,8 @@ class ReorderableList extends StatefulWidget {
   State<StatefulWidget> createState() => new _ReorderableListState();
 }
 
-class _ReorderableListState extends State<ReorderableList> with TickerProviderStateMixin {
+class _ReorderableListState extends State<ReorderableList>
+    with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return new Stack(
@@ -70,7 +71,8 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
     HapticFeedback.selectionClick();
     final draggedItem = _items[_dragging];
     draggedItem.update();
-    _dragProxy.setWidget(draggedItem.widget.childBuilder(draggedItem.context, true),
+    _dragProxy.setWidget(
+        draggedItem.widget.childBuilder(draggedItem.context, true),
         draggedItem.context.findRenderObject());
     this._scrollController.addListener(this._scrolled);
   }
@@ -99,16 +101,17 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
       double top = d?.padding?.top ?? 0.0;
       double bottom = context.size.height - (d?.padding?.bottom ?? 0.0);
 
-      if (_dragProxy.offset < top && position.pixels > position.minScrollExtent) {
+      if (_dragProxy.offset < top &&
+          position.pixels > position.minScrollExtent) {
         final overdrag = max(top - _dragProxy.offset, overdragMax);
-        newOffset = max(
-            position.minScrollExtent, position.pixels - step * overdrag / overdragCoef);
+        newOffset = max(position.minScrollExtent,
+            position.pixels - step * overdrag / overdragCoef);
       } else if (_dragProxy.offset + _dragProxy.height > bottom &&
           position.pixels < position.maxScrollExtent) {
-        final overdrag =
-            max<double>(_dragProxy.offset + _dragProxy.height - bottom, overdragMax);
-        newOffset = min(
-            position.maxScrollExtent, position.pixels + step * overdrag / overdragCoef);
+        final overdrag = max<double>(
+            _dragProxy.offset + _dragProxy.height - bottom, overdragMax);
+        newOffset = min(position.maxScrollExtent,
+            position.pixels + step * overdrag / overdragCoef);
       }
 
       if (newOffset != null && (newOffset - position.pixels).abs() >= 1.0) {
@@ -165,8 +168,9 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
         duration: Duration(milliseconds: 300));
 
     _finalAnimation.addListener(() {
-      _dragProxy.offset = Tween<double>(begin: dragProxyOffset, end: originalOffset)
-          .lerp(_finalAnimation.value);
+      _dragProxy.offset =
+          Tween<double>(begin: dragProxyOffset, end: originalOffset)
+              .lerp(_finalAnimation.value);
       _dragProxy.shadowOpacity = 1.0 - _finalAnimation.value;
     });
 
@@ -206,14 +210,15 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
         if (item.key == _dragging) continue;
         final itemTop = _itemOffset(item);
         if (itemTop > draggingTop) continue;
-        final itemBottom =
-            itemTop + (item.context.findRenderObject() as RenderBox).size.height / 2;
+        final itemBottom = itemTop +
+            (item.context.findRenderObject() as RenderBox).size.height / 2;
 
         if (_dragProxy.offset < itemBottom) {
           onReorderApproved.add(() {
             _adjustItemTranslation(item.key, -draggingHeight, draggingHeight);
           });
-          if (closest == null || closestDistance > (itemBottom - _dragProxy.offset)) {
+          if (closest == null ||
+              closestDistance > (itemBottom - _dragProxy.offset)) {
             closest = item;
             closestDistance = (itemBottom - _dragProxy.offset);
           }
@@ -227,13 +232,14 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
         final itemTop = _itemOffset(item);
         if (itemTop < draggingTop) continue;
 
-        final itemBottom =
-            itemTop + (item.context.findRenderObject() as RenderBox).size.height / 2;
+        final itemBottom = itemTop +
+            (item.context.findRenderObject() as RenderBox).size.height / 2;
         if (draggingBottom > itemBottom) {
           onReorderApproved.add(() {
             _adjustItemTranslation(item.key, draggingHeight, draggingHeight);
           });
-          if (closest == null || closestDistance > (draggingBottom - itemBottom)) {
+          if (closest == null ||
+              closestDistance > (draggingBottom - itemBottom)) {
             closest = item;
             closestDistance = draggingBottom - itemBottom;
           }
@@ -243,7 +249,9 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
 
     // _lastReportedKey check is to ensure we don't keep spamming the callback when reorder
     // was rejected for this key;
-    if (closest != null && closest.key != _dragging && closest.key != _lastReportedKey) {
+    if (closest != null &&
+        closest.key != _dragging &&
+        closest.key != _lastReportedKey) {
       SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         _scheduledRebuild = false;
       });
@@ -283,7 +291,8 @@ class _ReorderableListState extends State<ReorderableList> with TickerProviderSt
   }
 
   static _ReorderableListState of(BuildContext context) {
-    return context.ancestorStateOfType(new TypeMatcher<_ReorderableListState>());
+    return context
+        .ancestorStateOfType(new TypeMatcher<_ReorderableListState>());
   }
 
   //
@@ -374,8 +383,8 @@ class _ReorderableItemState extends State<ReorderableItem> {
     return Listener(
         onPointerDown: _routePointer,
         child: Transform(
-            transform:
-                new Matrix4.translationValues(0.0, _listState.itemTranslation(key), 0.0),
+            transform: new Matrix4.translationValues(
+                0.0, _listState.itemTranslation(key), 0.0),
             child: DecoratedBox(
                 position: DecorationPosition.foreground,
                 decoration: widget.decorationBuilder != null
@@ -479,7 +488,8 @@ class _DragProxyState extends State<_DragProxy> {
                       height: decorationHeight,
                       decoration: BoxDecoration(
                           border: Border(
-                              bottom: BorderSide(color: Color(0x50000000), width: 0.5)),
+                              bottom: BorderSide(
+                                  color: Color(0x50000000), width: 0.5)),
                           gradient: LinearGradient(
                               begin: Alignment(0.0, -1.0),
                               end: Alignment(0.0, 1.0),
@@ -496,7 +506,8 @@ class _DragProxyState extends State<_DragProxy> {
                       height: decorationHeight,
                       decoration: BoxDecoration(
                           border: Border(
-                              top: BorderSide(color: Color(0x50000000), width: 0.5)),
+                              top: BorderSide(
+                                  color: Color(0x50000000), width: 0.5)),
                           gradient: LinearGradient(
                               begin: Alignment(0.0, -1.0),
                               end: Alignment(0.0, 1.0),
@@ -508,8 +519,8 @@ class _DragProxyState extends State<_DragProxy> {
                     )),
               ],
             ),
-            rect: new Rect.fromLTWH(0.0, _offset - decorationHeight, _size.width,
-                _size.height + decorationHeight * 2 + 1.0))
+            rect: new Rect.fromLTWH(0.0, _offset - decorationHeight,
+                _size.width, _size.height + decorationHeight * 2 + 1.0))
         : new Container(width: 0.0, height: 0.0);
   }
 

@@ -63,7 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final draggedItem = _items[draggingIndex];
     setState(() {
-      debugPrint("Reordering " + item.toString() + " -> " + newPosition.toString());
+      debugPrint(
+          "Reordering " + item.toString() + " -> " + newPosition.toString());
       _items.removeAt(draggingIndex);
       _items.insert(newPositionIndex, draggedItem);
     });
@@ -119,14 +120,16 @@ class Item extends StatelessWidget {
   Widget _buildChild(BuildContext context, bool dragging) {
     return Container(
         // slightly transparent background white dragging (just like on iOS)
-        decoration: BoxDecoration(color: dragging ? Color(0xD0FFFFFF) : Colors.white),
+        decoration:
+            BoxDecoration(color: dragging ? Color(0xD0FFFFFF) : Colors.white),
         child: SafeArea(
             top: false,
             bottom: false,
             child: Row(
               children: <Widget>[
                 Expanded(
-                    child: Text(data.title, style: Theme.of(context).textTheme.subhead)),
+                    child: Text(data.title,
+                        style: Theme.of(context).textTheme.subhead)),
                 Icon(Icons.reorder,
                     color: dragging ? Color(0xFF555555) : Color(0xFF888888)),
               ],
