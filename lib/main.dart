@@ -71,6 +71,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
+  void _reorderCompleteCallback(Key item) {
+    int draggingIndex = _indexOfKey(item);
+    print("reorderComplete(draggingIndex $draggingIndex, item ${item.toString()})");
+  }
+
   //
   // Reordering works by having ReorderableList widget in hierarchy
   // containing ReorderableItems widgets
@@ -85,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
               child: ReorderableList(
                   onReorder: this._reorderCallback,
+                  onReorderComplete: this._reorderCompleteCallback,
                   child: ListView.builder(
                     itemCount: _items.length,
                     itemBuilder: (BuildContext c, index) => new Item(

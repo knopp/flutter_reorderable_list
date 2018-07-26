@@ -9,13 +9,15 @@ import 'dart:collection';
 import 'dart:math';
 
 typedef bool RedorderItemCallback(Key draggedItem, Key newPosition);
+typedef void RedorderCompleteCallback(Key draggedItem);
 
 class ReorderableList extends StatefulWidget {
-  ReorderableList({this.child, this.onReorder, this.scrollController});
+  ReorderableList({this.child, this.onReorder, this.onReorderComplete, this.scrollController});
 
   final Widget child;
 
   final RedorderItemCallback onReorder;
+  final RedorderCompleteCallback onReorderComplete;
 
   // Optional scroll controller used when scrolling during dragging; If not set
   // PrimaryScrollController is used
@@ -156,6 +158,12 @@ class _ReorderableListState extends State<ReorderableList>
 
     var current = _items[_dragging];
     if (current == null) return;
+
+    if (details != null) {
+      if (widget.onReorderComplete != null) {
+        widget.onReorderComplete(_dragging);
+      }
+    }
 
     final originalOffset = _itemOffset(current);
     final dragProxyOffset = _dragProxy.offset;
