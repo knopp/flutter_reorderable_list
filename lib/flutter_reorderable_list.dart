@@ -613,6 +613,7 @@ class _DragProxyState extends State<_DragProxy> {
     state._dragProxy = this;
 
     final double decorationHeight = 10.0;
+    final mq = MediaQuery.of(context);
 
     return _widget != null && _size != null && _offset != null
         ? new Positioned.fromRect(
@@ -626,7 +627,8 @@ class _DragProxyState extends State<_DragProxy> {
                       decoration: BoxDecoration(
                           border: Border(
                               bottom: BorderSide(
-                                  color: Color(0x50000000), width: 0.5)),
+                                  color: Color(0x50000000),
+                                  width: 1.0 / mq.devicePixelRatio)),
                           gradient: LinearGradient(
                               begin: Alignment(0.0, -1.0),
                               end: Alignment(0.0, 1.0),
@@ -644,7 +646,8 @@ class _DragProxyState extends State<_DragProxy> {
                       decoration: BoxDecoration(
                           border: Border(
                               top: BorderSide(
-                                  color: Color(0x50000000), width: 0.5)),
+                                  color: Color(0x50000000),
+                                  width: 1.0 / mq.devicePixelRatio)),
                           gradient: LinearGradient(
                               begin: Alignment(0.0, -1.0),
                               end: Alignment(0.0, 1.0),
