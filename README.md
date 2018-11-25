@@ -1,9 +1,11 @@
-# flutter_reorderable_list
+# Reorderable List in Flutter
 
-A new Flutter package project.
+iOS-like proof of concept reorderable list with animations
+
+## Preview
+
+<img src="https://i.imgur.com/nuHCTdP.gif" width="300">
 
 ## Getting Started
 
-For help getting started with Flutter, view our online [documentation](https://flutter.io/).
-
-For help on editing package code, view the [documentation](https://flutter.io/developing-packages/).
+See `example/lib/main.dart` for example usage
