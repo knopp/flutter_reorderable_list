@@ -137,16 +137,16 @@ class Item extends StatelessWidget {
       // slightly transparent background white dragging (just like on iOS)
       decoration = BoxDecoration(color: Color(0xD0FFFFFF));
     } else {
-      bool dragging = state == ReorderableItemState.placeholder;
+      bool placeholder = state == ReorderableItemState.placeholder;
       decoration = BoxDecoration(
           border: Border(
-              top: isFirst && !dragging
+              top: isFirst && !placeholder
                   ? Divider.createBorderSide(context) //
                   : BorderSide.none,
-              bottom: isLast && dragging
+              bottom: isLast && placeholder
                   ? BorderSide.none //
                   : Divider.createBorderSide(context)),
-          color: Colors.white);
+          color: placeholder ? null : Colors.white);
     }
 
     return Container(
