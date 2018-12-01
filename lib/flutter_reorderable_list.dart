@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'dart:collection';
 import 'dart:math';
-
+import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
 typedef bool RedorderItemCallback(Key draggedItem, Key newPosition);
@@ -180,11 +180,11 @@ class _ReorderableListState extends State<ReorderableList>
       current?.update();
     }
 
-    _dragging = key;
+    _maybeDragging = key;
     _lastReportedKey = null;
     if (_recognizer == null) {
       _recognizer = new _Recognizer()
-        ..onDown = _dragDown
+        ..onStart = _dragStart
         ..onUpdate = _dragUpdate
         ..onEnd = _dragEnd
         ..onCancel = _dragCancel;
@@ -192,8 +192,14 @@ class _ReorderableListState extends State<ReorderableList>
     _recognizer.addPointer(event);
   }
 
-  void _dragDown(DragDownDetails details) {
-    HapticFeedback.selectionClick();
+  Key _maybeDragging;
+
+  void _dragStart(DragStartDetails details) {
+    if (_dragging == null && _maybeDragging != null) {
+      _dragging = _maybeDragging;
+      _maybeDragging = null;
+    }
+    _hapticFeedback();
     final draggedItem = _items[_dragging];
     draggedItem.update();
     _dragProxy.setWidget(
@@ -271,7 +277,11 @@ class _ReorderableListState extends State<ReorderableList>
   }
 
   _dragEnd(DragEndDetails details) async {
-    HapticFeedback.selectionClick();
+    if (_dragging == null) {
+      return;
+    }
+
+    _hapticFeedback();
     if (_scrolling) {
       var prevDragging = _dragging;
       _dragging = null;
@@ -424,7 +434,7 @@ class _ReorderableListState extends State<ReorderableList>
       _lastReportedKey = closest.key;
       if (widget.onReorder != null) {
         if (widget.onReorder(_dragging, closest.key)) {
-          HapticFeedback.selectionClick();
+          _hapticFeedback();
           for (final f in onReorderApproved) {
             f();
           }
@@ -432,6 +442,10 @@ class _ReorderableListState extends State<ReorderableList>
         }
       }
     }
+  }
+
+  void _hapticFeedback() {
+    HapticFeedback.lightImpact();
   }
 
   bool _scheduledRebuild = false;
@@ -638,7 +652,14 @@ class _DragProxyState extends State<_DragProxy> {
                                 Color(0x30000000)
                               ])),
                     )),
-                IgnorePointer(child: _widget),
+                IgnorePointer(
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    child: _widget,
+                    removeTop: true,
+                    removeBottom: true,
+                  ),
+                ),
                 Opacity(
                     opacity: _shadowOpacity,
                     child: Container(
@@ -681,9 +702,9 @@ class _Recognizer extends VerticalDragGestureRecognizer {
   void handleEvent(PointerEvent event) {
     super.handleEvent(event);
     if (event is PointerMoveEvent && !_resolved) {
-      // if (event.delta.dy.abs() > event.delta.dx.abs()) {
-      resolve(GestureDisposition.accepted);
-      // }
+      if (event.delta.dy.abs() > event.delta.dx.abs()) {
+        resolve(GestureDisposition.accepted);
+      }
     }
   }
 
@@ -691,13 +712,32 @@ class _Recognizer extends VerticalDragGestureRecognizer {
   void addPointer(PointerEvent event) {
     super.addPointer(event);
     _resolved = false;
+    if (_resolveTimer == null) {
+      _resolveTimer = Timer(Duration(milliseconds: 150), () {
+        resolve(GestureDisposition.accepted);
+      });
+    }
   }
 
   @override
   void resolve(GestureDisposition disposition) {
-    if (disposition == GestureDisposition.accepted) _resolved = true;
+    if (_resolveTimer != null) {
+      _resolveTimer.cancel();
+      _resolveTimer = null;
+    }
+    _resolved = true;
     super.resolve(disposition);
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    if (_resolveTimer != null) {
+      _resolveTimer.cancel();
+      _resolveTimer = null;
+    }
+  }
+
+  Timer _resolveTimer;
   bool _resolved = false;
 }
