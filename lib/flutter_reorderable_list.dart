@@ -82,11 +82,7 @@ class ReorderableItem extends StatefulWidget {
 
 typedef ReorderableListenerCallback = bool Function();
 
-//
-//
-
-@immutable
-class ReorderableListener extends BaseReorderableListener {
+class ReorderableListener extends StatelessWidget {
   ReorderableListener({
     Key key,
     this.child,
@@ -106,21 +102,43 @@ class ReorderableListener extends BaseReorderableListener {
 
   void _routePointer(PointerEvent event, BuildContext context) {
     if (canStart == null || canStart()) {
-      startDragging(context: context, event: event);
+      _startDragging(context: context, event: event);
+    }
+  }
+
+  @protected
+  MultiDragGestureRecognizer createRecognizer() {
+    return _Recognizer();
+  }
+
+  void _startDragging({BuildContext context, PointerEvent event}) {
+    _ReorderableItemState state =
+        context.ancestorStateOfType(const TypeMatcher<_ReorderableItemState>());
+    final scrollable = Scrollable.of(context);
+    final listState = _ReorderableListState.of(context);
+    if (listState.dragging == null) {
+      listState._startDragging(
+          key: state.key,
+          event: event,
+          scrollable: scrollable,
+          recognizer: createRecognizer());
     }
   }
 }
 
-abstract class BaseReorderableListener extends StatelessWidget {
-  BaseReorderableListener({Key key}) : super(key: key);
+class DelayedReorderableListener extends ReorderableListener {
+  DelayedReorderableListener({
+    Key key,
+    Widget child,
+    ReorderableListenerCallback canStart,
+    this.delay = kLongPressTimeout,
+  }) : super(key: key, child: child, canStart: canStart);
+
+  final Duration delay;
 
   @protected
-  void startDragging({BuildContext context, PointerEvent event}) {
-    _ReorderableItemState state =
-        context.ancestorStateOfType(const TypeMatcher<_ReorderableItemState>());
-    final scrollable = Scrollable.of(context);
-    _ReorderableListState.of(context)
-        ._startDragging(state.key, event, scrollable);
+  MultiDragGestureRecognizer createRecognizer() {
+    return DelayedMultiDragGestureRecognizer(delay: delay);
   }
 }
 
@@ -129,7 +147,7 @@ abstract class BaseReorderableListener extends StatelessWidget {
 //
 
 class _ReorderableListState extends State<ReorderableList>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, Drag {
   @override
   Widget build(BuildContext context) {
     return new Stack(
@@ -164,10 +182,15 @@ class _ReorderableListState extends State<ReorderableList>
   Key get dragging => _dragging;
 
   Key _dragging;
-  _Recognizer _recognizer;
+  MultiDragGestureRecognizer _recognizer;
   _DragProxyState _dragProxy;
 
-  void _startDragging(Key key, PointerEvent event, ScrollableState scrollable) {
+  void _startDragging({
+    Key key,
+    PointerEvent event,
+    MultiDragGestureRecognizer recognizer,
+    ScrollableState scrollable,
+  }) {
     _scrollable = scrollable;
 
     _finalAnimation?.stop(canceled: true);
@@ -182,19 +205,15 @@ class _ReorderableListState extends State<ReorderableList>
 
     _maybeDragging = key;
     _lastReportedKey = null;
-    if (_recognizer == null) {
-      _recognizer = new _Recognizer()
-        ..onStart = _dragStart
-        ..onUpdate = _dragUpdate
-        ..onEnd = _dragEnd
-        ..onCancel = _dragCancel;
-    }
+    _recognizer?.dispose();
+    _recognizer = recognizer;
+    _recognizer.onStart = _dragStart;
     _recognizer.addPointer(event);
   }
 
   Key _maybeDragging;
 
-  void _dragStart(DragStartDetails details) {
+  Drag _dragStart(Offset position) {
     if (_dragging == null && _maybeDragging != null) {
       _dragging = _maybeDragging;
       _maybeDragging = null;
@@ -207,6 +226,8 @@ class _ReorderableListState extends State<ReorderableList>
             .childBuilder(draggedItem.context, ReorderableItemState.dragProxy),
         draggedItem.context.findRenderObject());
     this._scrollable.position.addListener(this._scrolled);
+
+    return this;
   }
 
   void _draggedItemWidgetUpdated() {
@@ -221,7 +242,7 @@ class _ReorderableListState extends State<ReorderableList>
     checkDragPosition();
   }
 
-  void _dragUpdate(DragUpdateDetails details) {
+  void update(DragUpdateDetails details) {
     _dragProxy.offset += details.delta.dy;
     checkDragPosition();
     maybeScroll();
@@ -272,11 +293,11 @@ class _ReorderableListState extends State<ReorderableList>
 
   bool _scrolling = false;
 
-  void _dragCancel() {
-    _dragEnd(null);
+  void cancel() {
+    end(null);
   }
 
-  _dragEnd(DragEndDetails details) async {
+  end(DragEndDetails details) async {
     if (_dragging == null) {
       return;
     }
@@ -287,14 +308,14 @@ class _ReorderableListState extends State<ReorderableList>
       _dragging = null;
       SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         _dragging = prevDragging;
-        _dragEnd(details);
+        end(details);
       });
       return;
     }
 
     if (_scheduledRebuild) {
       SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
-        _dragEnd(details);
+        if (mounted) end(details);
       });
       return;
     }
@@ -323,6 +344,9 @@ class _ReorderableListState extends State<ReorderableList>
       _dragProxy.shadowOpacity = 1.0 - _finalAnimation.value;
     });
 
+    _recognizer?.dispose();
+    _recognizer = null;
+
     await _finalAnimation.animateTo(1.0, curve: Curves.easeOut);
 
     if (_finalAnimation != null) {
@@ -334,26 +358,6 @@ class _ReorderableListState extends State<ReorderableList>
       _dragProxy.hide();
       current.update();
       _scrollable = null;
-
-      if (widget.onReorderDone != null) {
-        widget.onReorderDone(dragging);
-      }
-    }
-  }
-
-  void cancel() {
-    if (_dragging != null) {
-      if (_finalAnimation != null) {
-        _finalAnimation.dispose();
-        _finalAnimation = null;
-      }
-
-      final dragging = _dragging;
-      _dragging = null;
-      _dragProxy.hide();
-
-      var current = _items[_dragging];
-      current?.update();
 
       if (widget.onReorderDone != null) {
         widget.onReorderDone(dragging);
@@ -692,52 +696,47 @@ class _DragProxyState extends State<_DragProxy> {
   }
 }
 
+class _VerticalPointerState extends MultiDragPointerState {
+  _VerticalPointerState(Offset initialPosition) : super(initialPosition) {
+    _resolveTimer = Timer(Duration(milliseconds: 150), () {
+      resolve(GestureDisposition.accepted);
+      _resolveTimer = null;
+    });
+  }
+
+  @override
+  void checkForResolutionAfterMove() {
+    assert(pendingDelta != null);
+    if (pendingDelta.dy.abs() > pendingDelta.dx.abs())
+      resolve(GestureDisposition.accepted);
+  }
+
+  @override
+  void accepted(GestureMultiDragStartCallback starter) {
+    starter(initialPosition);
+    _resolveTimer?.cancel();
+    _resolveTimer = null;
+  }
+
+  void dispose() {
+    _resolveTimer?.cancel();
+    _resolveTimer = null;
+    super.dispose();
+  }
+
+  Timer _resolveTimer;
+}
+
 //
 // VerticalDragGestureRecognizer waits for kTouchSlop to be reached; We don't want that
 // when reordering items
 //
-
-class _Recognizer extends VerticalDragGestureRecognizer {
+class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
   @override
-  void handleEvent(PointerEvent event) {
-    super.handleEvent(event);
-    if (event is PointerMoveEvent && !_resolved) {
-      if (event.delta.dy.abs() > event.delta.dx.abs()) {
-        resolve(GestureDisposition.accepted);
-      }
-    }
+  _VerticalPointerState createNewPointerState(PointerDownEvent event) {
+    return _VerticalPointerState(event.position);
   }
 
   @override
-  void addPointer(PointerEvent event) {
-    super.addPointer(event);
-    _resolved = false;
-    if (_resolveTimer == null) {
-      _resolveTimer = Timer(Duration(milliseconds: 150), () {
-        resolve(GestureDisposition.accepted);
-      });
-    }
-  }
-
-  @override
-  void resolve(GestureDisposition disposition) {
-    if (_resolveTimer != null) {
-      _resolveTimer.cancel();
-      _resolveTimer = null;
-    }
-    _resolved = true;
-    super.resolve(disposition);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    if (_resolveTimer != null) {
-      _resolveTimer.cancel();
-      _resolveTimer = null;
-    }
-  }
-
-  Timer _resolveTimer;
-  bool _resolved = false;
+  String get debugDescription => "Vertical recognizer";
 }

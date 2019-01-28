@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reorderable_list/flutter_reorderable_list.dart';
 
@@ -34,6 +35,11 @@ class ItemData {
 
   // Each item in reorderable list needs stable and unique key
   final Key key;
+}
+
+enum DraggingMode {
+  iOS,
+  Android,
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -81,6 +87,8 @@ class _MyHomePageState extends State<MyHomePage> {
   // containing ReorderableItems widgets
   //
 
+  DraggingMode _draggingMode = DraggingMode.iOS;
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: ReorderableList(
@@ -89,7 +97,31 @@ class _MyHomePageState extends State<MyHomePage> {
         child: CustomScrollView(
           // cacheExtent: 3000,
           slivers: <Widget>[
-            const SliverAppBar(
+            SliverAppBar(
+              actions: <Widget>[
+                PopupMenuButton<DraggingMode>(
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: Text("Options"),
+                  ),
+                  initialValue: _draggingMode,
+                  onSelected: (DraggingMode mode) {
+                    setState(() {
+                      _draggingMode = mode;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuItem<DraggingMode>>[
+                        const PopupMenuItem<DraggingMode>(
+                            value: DraggingMode.iOS,
+                            child: Text('iOS-like dragging')),
+                        const PopupMenuItem<DraggingMode>(
+                            value: DraggingMode.Android,
+                            child: Text('Android-like dragging')),
+                      ],
+                ),
+              ],
               pinned: true,
               expandedHeight: 150.0,
               flexibleSpace: const FlexibleSpaceBar(
@@ -103,10 +135,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index) {
                       return Item(
-                          data: _items[index],
-                          // first and last attributes affect border drawn during dragging
-                          isFirst: index == 0,
-                          isLast: index == _items.length - 1);
+                        data: _items[index],
+                        // first and last attributes affect border drawn during dragging
+                        isFirst: index == 0,
+                        isLast: index == _items.length - 1,
+                        draggingMode: _draggingMode,
+                      );
                     },
                     childCount: _items.length,
                   ),
@@ -123,11 +157,13 @@ class Item extends StatelessWidget {
     this.data,
     this.isFirst,
     this.isLast,
+    this.draggingMode,
   });
 
   final ItemData data;
   final bool isFirst;
   final bool isLast;
+  final DraggingMode draggingMode;
 
   Widget _buildChild(BuildContext context, ReorderableItemState state) {
     BoxDecoration decoration;
@@ -149,7 +185,21 @@ class Item extends StatelessWidget {
           color: placeholder ? null : Colors.white);
     }
 
-    return Container(
+    // For iOS dragging mdoe, there will be drag handle on the right that triggers
+    // reordering; For android mode it will be just an empty container
+    Widget dragHandle = draggingMode == DraggingMode.iOS
+        ? ReorderableListener(
+            child: Container(
+              padding: EdgeInsets.only(right: 18.0, left: 18.0),
+              color: Color(0x08000000),
+              child: Center(
+                child: Icon(Icons.reorder, color: Color(0xFF888888)),
+              ),
+            ),
+          )
+        : Container();
+
+    Widget content = Container(
       decoration: decoration,
       child: SafeArea(
           top: false,
@@ -169,20 +219,21 @@ class Item extends StatelessWidget {
                         style: Theme.of(context).textTheme.subhead),
                   )),
                   // Triggers the reordering
-                  ReorderableListener(
-                    child: Container(
-                      padding: EdgeInsets.only(right: 18.0, left: 18.0),
-                      color: Color(0x08000000),
-                      child: Center(
-                        child: Icon(Icons.reorder, color: Color(0xFF888888)),
-                      ),
-                    ),
-                  ),
+                  dragHandle,
                 ],
               ),
             ),
           )),
     );
+
+    // For android dragging mode, wrap the entire content in DelayedReorderableListener
+    if (draggingMode == DraggingMode.Android) {
+      content = DelayedReorderableListener(
+        child: content,
+      );
+    }
+
+    return content;
   }
 
   @override

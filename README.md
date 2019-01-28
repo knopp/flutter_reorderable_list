@@ -15,6 +15,8 @@ See `example/lib/main.dart` for example usage
 * Smooth reordering animations
 * Supports large lists (thousands of items)
 * Supports different item heights
+* iOS like reordering with drag handle 
+* Android like (long touch) reordering 
 
 ## Caveats
 

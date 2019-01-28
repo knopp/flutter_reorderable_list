@@ -1,6 +1,6 @@
 name: flutter_reorderable_list
-description: A new Flutter package project.
-version: 0.1.1
+description: Reorderable list for flutter.
+version: 0.1.2
 author: Matej Knopp <matej.knopp@gmail.com>
 homepage: https://github.com/knopp/flutter_reorderable_list
 
