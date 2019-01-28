@@ -160,14 +160,14 @@ class _ReorderableListState extends State<ReorderableList>
   void initState() {
     super.initState();
     if (widget.cancellationToken != null) {
-      widget.cancellationToken._callbacks.add(this.cancel);
+      widget.cancellationToken._callbacks.add(this._cancel);
     }
   }
 
   @override
   void dispose() {
     if (widget.cancellationToken != null) {
-      widget.cancellationToken._callbacks.remove(this.cancel);
+      widget.cancellationToken._callbacks.remove(this._cancel);
     }
     _finalAnimation?.dispose();
     for (final c in _itemTranslations.values) {
@@ -176,6 +176,26 @@ class _ReorderableListState extends State<ReorderableList>
     _scrolling = null;
     _recognizer?.dispose();
     super.dispose();
+  }
+
+  void _cancel() {
+    if (_dragging != null) {
+      if (_finalAnimation != null) {
+        _finalAnimation.dispose();
+        _finalAnimation = null;
+      }
+
+      final dragging = _dragging;
+      _dragging = null;
+      _dragProxy.hide();
+
+      var current = _items[_dragging];
+      current?.update();
+
+      if (widget.onReorderDone != null) {
+        widget.onReorderDone(dragging);
+      }
+    }
   }
 
   // Returns currently dragged key
