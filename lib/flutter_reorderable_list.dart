@@ -325,7 +325,7 @@ class _ReorderableListState extends State<ReorderableList>
       return;
     }
 
-    _hapticFeedback();
+    //_hapticFeedback();
     if (_scrolling) {
       var prevDragging = _dragging;
       _dragging = null;
@@ -461,7 +461,7 @@ class _ReorderableListState extends State<ReorderableList>
       _lastReportedKey = closest.key;
       if (widget.onReorder != null) {
         if (widget.onReorder(_dragging, closest.key)) {
-          _hapticFeedback();
+          //_hapticFeedback();
           for (final f in onReorderApproved) {
             f();
           }
