@@ -32,9 +32,11 @@ class ReorderableList extends StatefulWidget {
     @required this.onReorder,
     this.onReorderDone,
     this.cancellationToken,
+    this.enableDragDecoration = true,
   }) : super(key: key);
 
   final Widget child;
+  final bool enableDragDecoration;
 
   final RedorderItemCallback onReorder;
   final ReorderCompleteCallback onReorderDone;
@@ -244,7 +246,8 @@ class _ReorderableListState extends State<ReorderableList>
     _dragProxy.setWidget(
         draggedItem.widget
             .childBuilder(draggedItem.context, ReorderableItemState.dragProxy),
-        draggedItem.context.findRenderObject());
+        draggedItem.context.findRenderObject(),
+        widget.enableDragDecoration);
     this._scrollable.position.addListener(this._scrolled);
 
     return this;
@@ -603,11 +606,13 @@ class _DragProxyState extends State<_DragProxy> {
   Widget _widget;
   Size _size;
   double _offset;
+  bool _enableDragDecoration;
 
   _DragProxyState();
 
-  void setWidget(Widget widget, RenderBox position) {
+  void setWidget(Widget widget, RenderBox position, bool enableDragDecoration) {
     setState(() {
+      _enableDragDecoration = enableDragDecoration;
       _shadowOpacity = 1.0;
       _widget = widget;
       final state = _ReorderableListState.of(context);
@@ -658,24 +663,26 @@ class _DragProxyState extends State<_DragProxy> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Opacity(
-                    opacity: _shadowOpacity,
-                    child: Container(
-                      height: decorationHeight,
-                      decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: Color(0x50000000),
-                                  width: 1.0 / mq.devicePixelRatio)),
-                          gradient: LinearGradient(
-                              begin: Alignment(0.0, -1.0),
-                              end: Alignment(0.0, 1.0),
-                              colors: <Color>[
-                                Color(0x00000000),
-                                Color(0x10000000),
-                                Color(0x30000000)
-                              ])),
-                    )),
+                _enableDragDecoration ?
+                  Opacity(
+                      opacity: _shadowOpacity,
+                      child: Container(
+                        height: decorationHeight,
+                        decoration: BoxDecoration(
+                            border: Border(
+                                bottom: BorderSide(
+                                    color: Color(0x50000000),
+                                    width: 1.0 / mq.devicePixelRatio)),
+                            gradient: LinearGradient(
+                                begin: Alignment(0.0, -1.0),
+                                end: Alignment(0.0, 1.0),
+                                colors: <Color>[
+                                  Color(0x00000000),
+                                  Color(0x10000000),
+                                  Color(0x30000000)
+                                ])),
+                    ))
+                    : SizedBox(height: decorationHeight),
                 IgnorePointer(
                   child: MediaQuery.removePadding(
                     context: context,
@@ -684,24 +691,26 @@ class _DragProxyState extends State<_DragProxy> {
                     removeBottom: true,
                   ),
                 ),
-                Opacity(
-                    opacity: _shadowOpacity,
-                    child: Container(
-                      height: decorationHeight,
-                      decoration: BoxDecoration(
-                          border: Border(
-                              top: BorderSide(
-                                  color: Color(0x50000000),
-                                  width: 1.0 / mq.devicePixelRatio)),
-                          gradient: LinearGradient(
-                              begin: Alignment(0.0, -1.0),
-                              end: Alignment(0.0, 1.0),
-                              colors: <Color>[
-                                Color(0x30000000),
-                                Color(0x10000000),
-                                Color(0x00000000)
-                              ])),
-                    )),
+                _enableDragDecoration ?
+                  Opacity(
+                      opacity: _shadowOpacity,
+                      child: Container(
+                        height: decorationHeight,
+                        decoration: BoxDecoration(
+                            border: Border(
+                                top: BorderSide(
+                                    color: Color(0x50000000),
+                                    width: 1.0 / mq.devicePixelRatio)),
+                            gradient: LinearGradient(
+                                begin: Alignment(0.0, -1.0),
+                                end: Alignment(0.0, 1.0),
+                                colors: <Color>[
+                                  Color(0x30000000),
+                                  Color(0x10000000),
+                                  Color(0x00000000)
+                                ])),
+                      ))
+                  : SizedBox(height: decorationHeight),
               ],
             ),
             rect: new Rect.fromLTWH(0.0, _offset - decorationHeight,
