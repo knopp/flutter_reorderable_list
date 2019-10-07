@@ -12,8 +12,13 @@ See `example/lib/main.dart` for example usage
 
 ## Highlights
 
+Unlike flutter's `ReorderableListView` this one 
+* Works with slivers so it can be placed in `CustomScrollView` and used with `SliverAppBar`
+* Supports large lists (thousands of items) without any issues
+
+Other features
+
 * Smooth reordering animations
-* Supports large lists (thousands of items)
 * Supports different item heights
 * iOS like reordering with drag handle 
 * Android like (long touch) reordering 
