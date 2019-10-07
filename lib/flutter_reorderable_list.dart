@@ -11,7 +11,7 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
-typedef bool RedorderItemCallback(Key draggedItem, Key newPosition);
+typedef bool ReorderItemCallback(Key draggedItem, Key newPosition);
 typedef void ReorderCompleteCallback(Key draggedItem);
 
 // Can be used to cancel reordering (i.e. when underlying data changed)
@@ -36,7 +36,7 @@ class ReorderableList extends StatefulWidget {
 
   final Widget child;
 
-  final RedorderItemCallback onReorder;
+  final ReorderItemCallback onReorder;
   final ReorderCompleteCallback onReorderDone;
 
   final CancellationToken cancellationToken;
