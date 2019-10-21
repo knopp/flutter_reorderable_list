@@ -185,7 +185,7 @@ class Item extends StatelessWidget {
           color: placeholder ? null : Colors.white);
     }
 
-    // For iOS dragging mdoe, there will be drag handle on the right that triggers
+    // For iOS dragging mode, there will be drag handle on the right that triggers
     // reordering; For android mode it will be just an empty container
     Widget dragHandle = draggingMode == DraggingMode.iOS
         ? ReorderableListener(
