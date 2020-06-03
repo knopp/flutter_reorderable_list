@@ -113,7 +113,7 @@ class ReorderableListener extends StatelessWidget {
 
   void _startDragging({BuildContext context, PointerEvent event}) {
     _ReorderableItemState state =
-        context.ancestorStateOfType(const TypeMatcher<_ReorderableItemState>());
+        context.findAncestorStateOfType<_ReorderableItemState>();
     final scrollable = Scrollable.of(context);
     final listState = _ReorderableListState.of(context);
     if (listState.dragging == null) {
@@ -494,8 +494,7 @@ class _ReorderableListState extends State<ReorderableList>
   }
 
   static _ReorderableListState of(BuildContext context) {
-    return context
-        .ancestorStateOfType(new TypeMatcher<_ReorderableListState>());
+    return context.findAncestorStateOfType<_ReorderableListState>();
   }
 
   //
