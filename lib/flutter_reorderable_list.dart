@@ -14,6 +14,23 @@ import 'dart:ui' show lerpDouble;
 typedef bool ReorderItemCallback(Key draggedItem, Key newPosition);
 typedef void ReorderCompleteCallback(Key draggedItem);
 
+// Represents placeholder for currently dragged row including decorations
+// (i.e. before and after shadow)
+class DecoratedPlaceholder {
+  DecoratedPlaceholder({
+    this.offset,
+    this.widget,
+  });
+
+  // Height of decoration before widget
+  final double offset;
+  final Widget widget;
+}
+
+// Decorates current placeholder widget
+typedef DecoratedPlaceholder DecoratePlaceholder(
+    Widget widget, double decorationOpacity);
+
 // Can be used to cancel reordering (i.e. when underlying data changed)
 class CancellationToken {
   void cancelDragging() {
@@ -32,12 +49,14 @@ class ReorderableList extends StatefulWidget {
     @required this.onReorder,
     this.onReorderDone,
     this.cancellationToken,
+    this.decoratePlaceholder = _defaultDecoratePlaceholder,
   }) : super(key: key);
 
   final Widget child;
 
   final ReorderItemCallback onReorder;
   final ReorderCompleteCallback onReorderDone;
+  final DecoratePlaceholder decoratePlaceholder;
 
   final CancellationToken cancellationToken;
 
@@ -152,7 +171,10 @@ class _ReorderableListState extends State<ReorderableList>
   Widget build(BuildContext context) {
     return new Stack(
       fit: StackFit.passthrough,
-      children: <Widget>[widget.child, new _DragProxy()],
+      children: <Widget>[
+        widget.child,
+        new _DragProxy(widget.decoratePlaceholder)
+      ],
     );
   }
 
@@ -361,7 +383,7 @@ class _ReorderableListState extends State<ReorderableList>
     _finalAnimation.addListener(() {
       _dragProxy.offset =
           lerpDouble(dragProxyOffset, originalOffset, _finalAnimation.value);
-      _dragProxy.shadowOpacity = 1.0 - _finalAnimation.value;
+      _dragProxy.decorationOpacity = 1.0 - _finalAnimation.value;
     });
 
     _recognizer?.dispose();
@@ -594,8 +616,12 @@ class _ReorderableItemState extends State<ReorderableItem> {
 //
 
 class _DragProxy extends StatefulWidget {
+  final DecoratePlaceholder decoratePlaceholder;
+
   @override
   State<StatefulWidget> createState() => new _DragProxyState();
+
+  _DragProxy(this.decoratePlaceholder);
 }
 
 class _DragProxyState extends State<_DragProxy> {
@@ -608,7 +634,7 @@ class _DragProxyState extends State<_DragProxy> {
 
   void setWidget(Widget widget, RenderBox position) {
     setState(() {
-      _shadowOpacity = 1.0;
+      _decorationOpacity = 1.0;
       _widget = widget;
       final state = _ReorderableListState.of(context);
       RenderBox renderBox = state.context.findRenderObject();
@@ -633,11 +659,11 @@ class _DragProxyState extends State<_DragProxy> {
 
   get height => _size.height;
 
-  double _shadowOpacity;
+  double _decorationOpacity;
 
-  set shadowOpacity(double val) {
+  set decorationOpacity(double val) {
     setState(() {
-      _shadowOpacity = val;
+      _decorationOpacity = val;
     });
   }
 
@@ -652,63 +678,27 @@ class _DragProxyState extends State<_DragProxy> {
     final state = _ReorderableListState.of(context);
     state._dragProxy = this;
 
-    final double decorationHeight = 10.0;
-    final mq = MediaQuery.of(context);
+    if (_widget != null && _size != null && _offset != null) {
+      final w = IgnorePointer(
+        child: MediaQuery.removePadding(
+          context: context,
+          child: _widget,
+          removeTop: true,
+          removeBottom: true,
+        ),
+      );
 
-    return _widget != null && _size != null && _offset != null
-        ? new Positioned.fromRect(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Opacity(
-                    opacity: _shadowOpacity,
-                    child: Container(
-                      height: decorationHeight,
-                      decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: Color(0x50000000),
-                                  width: 1.0 / mq.devicePixelRatio)),
-                          gradient: LinearGradient(
-                              begin: Alignment(0.0, -1.0),
-                              end: Alignment(0.0, 1.0),
-                              colors: <Color>[
-                                Color(0x00000000),
-                                Color(0x10000000),
-                                Color(0x30000000)
-                              ])),
-                    )),
-                IgnorePointer(
-                  child: MediaQuery.removePadding(
-                    context: context,
-                    child: _widget,
-                    removeTop: true,
-                    removeBottom: true,
-                  ),
-                ),
-                Opacity(
-                    opacity: _shadowOpacity,
-                    child: Container(
-                      height: decorationHeight,
-                      decoration: BoxDecoration(
-                          border: Border(
-                              top: BorderSide(
-                                  color: Color(0x50000000),
-                                  width: 1.0 / mq.devicePixelRatio)),
-                          gradient: LinearGradient(
-                              begin: Alignment(0.0, -1.0),
-                              end: Alignment(0.0, 1.0),
-                              colors: <Color>[
-                                Color(0x30000000),
-                                Color(0x10000000),
-                                Color(0x00000000)
-                              ])),
-                    )),
-              ],
-            ),
-            rect: new Rect.fromLTWH(_offsetX, _offset - decorationHeight,
-                _size.width, _size.height + decorationHeight * 2 + 1.0))
-        : new Container(width: 0.0, height: 0.0);
+      final decoratedPlaceholder =
+          widget.decoratePlaceholder(w, _decorationOpacity);
+      return Positioned(
+        child: decoratedPlaceholder.widget,
+        left: _offsetX,
+        width: _size.width,
+        top: offset - decoratedPlaceholder.offset,
+      );
+    } else {
+      return new Container(width: 0.0, height: 0.0);
+    }
   }
 
   @override
@@ -761,4 +751,56 @@ class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
 
   @override
   String get debugDescription => "Vertical recognizer";
+}
+
+DecoratedPlaceholder _defaultDecoratePlaceholder(
+    Widget widget, double decorationOpacity) {
+  final double decorationHeight = 10.0;
+
+  final decoratedWidget = Builder(builder: (BuildContext context) {
+    final mq = MediaQuery.of(context);
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Opacity(
+              opacity: decorationOpacity,
+              child: Container(
+                height: decorationHeight,
+                decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(
+                            color: Color(0x50000000),
+                            width: 1.0 / mq.devicePixelRatio)),
+                    gradient: LinearGradient(
+                        begin: Alignment(0.0, -1.0),
+                        end: Alignment(0.0, 1.0),
+                        colors: <Color>[
+                          Color(0x00000000),
+                          Color(0x10000000),
+                          Color(0x30000000)
+                        ])),
+              )),
+          widget,
+          Opacity(
+              opacity: decorationOpacity,
+              child: Container(
+                height: decorationHeight,
+                decoration: BoxDecoration(
+                    border: Border(
+                        top: BorderSide(
+                            color: Color(0x50000000),
+                            width: 1.0 / mq.devicePixelRatio)),
+                    gradient: LinearGradient(
+                        begin: Alignment(0.0, -1.0),
+                        end: Alignment(0.0, 1.0),
+                        colors: <Color>[
+                          Color(0x30000000),
+                          Color(0x10000000),
+                          Color(0x00000000)
+                        ])),
+              )),
+        ]);
+  });
+  return DecoratedPlaceholder(
+      offset: decorationHeight, widget: decoratedWidget);
 }
