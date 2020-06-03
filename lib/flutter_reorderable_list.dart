@@ -603,6 +603,7 @@ class _DragProxyState extends State<_DragProxy> {
   Widget _widget;
   Size _size;
   double _offset;
+  double _offsetX;
 
   _DragProxyState();
 
@@ -612,7 +613,9 @@ class _DragProxyState extends State<_DragProxy> {
       _widget = widget;
       final state = _ReorderableListState.of(context);
       RenderBox renderBox = state.context.findRenderObject();
-      _offset = position.localToGlobal(Offset.zero, ancestor: renderBox).dy;
+      final offset = position.localToGlobal(Offset.zero, ancestor: renderBox);
+      _offsetX = offset.dx;
+      _offset = offset.dy;
       _size = position.size;
     });
   }
@@ -704,7 +707,7 @@ class _DragProxyState extends State<_DragProxy> {
                     )),
               ],
             ),
-            rect: new Rect.fromLTWH(0.0, _offset - decorationHeight,
+            rect: new Rect.fromLTWH(_offsetX, _offset - decorationHeight,
                 _size.width, _size.height + decorationHeight * 2 + 1.0))
         : new Container(width: 0.0, height: 0.0);
   }
