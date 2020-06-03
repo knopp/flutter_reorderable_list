@@ -113,13 +113,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuItem<DraggingMode>>[
-                        const PopupMenuItem<DraggingMode>(
-                            value: DraggingMode.iOS,
-                            child: Text('iOS-like dragging')),
-                        const PopupMenuItem<DraggingMode>(
-                            value: DraggingMode.Android,
-                            child: Text('Android-like dragging')),
-                      ],
+                    const PopupMenuItem<DraggingMode>(
+                        value: DraggingMode.iOS,
+                        child: Text('iOS-like dragging')),
+                    const PopupMenuItem<DraggingMode>(
+                        value: DraggingMode.Android,
+                        child: Text('Android-like dragging')),
+                  ],
                 ),
               ],
               pinned: true,
@@ -216,7 +216,7 @@ class Item extends StatelessWidget {
                     padding:
                         EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0),
                     child: Text(data.title,
-                        style: Theme.of(context).textTheme.subhead),
+                        style: Theme.of(context).textTheme.subtitle1),
                   )),
                   // Triggers the reordering
                   dragHandle,
