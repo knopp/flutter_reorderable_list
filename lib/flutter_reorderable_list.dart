@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'dart:collection';
 import 'dart:math';
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' show lerpDouble;
 
 typedef bool ReorderItemCallback(Key draggedItem, Key newPosition);
@@ -480,7 +481,9 @@ class _ReorderableListState extends State<ReorderableList>
       _lastReportedKey = closest.key;
       if (widget.onReorder != null) {
         if (widget.onReorder(_dragging, closest.key)) {
-          _hapticFeedback();
+          if (Platform.isIOS) {
+            _hapticFeedback();
+          }
           for (final f in onReorderApproved) {
             f();
           }
