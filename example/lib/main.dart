@@ -113,13 +113,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuItem<DraggingMode>>[
-                        const PopupMenuItem<DraggingMode>(
-                            value: DraggingMode.iOS,
-                            child: Text('iOS-like dragging')),
-                        const PopupMenuItem<DraggingMode>(
-                            value: DraggingMode.Android,
-                            child: Text('Android-like dragging')),
-                      ],
+                    const PopupMenuItem<DraggingMode>(
+                        value: DraggingMode.iOS,
+                        child: Text('iOS-like dragging')),
+                    const PopupMenuItem<DraggingMode>(
+                        value: DraggingMode.Android,
+                        child: Text('Android-like dragging')),
+                  ],
                 ),
               ],
               pinned: true,
