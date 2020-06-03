@@ -1,11 +1,10 @@
 name: flutter_reorderable_list
 description: Reorderable list for flutter.
 version: 0.1.4
-author: Matej Knopp <matej.knopp@gmail.com>
 homepage: https://github.com/knopp/flutter_reorderable_list
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.0.0 <3.0.0"
 
 dependencies:
   flutter:
