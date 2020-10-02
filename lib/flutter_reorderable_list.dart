@@ -712,7 +712,8 @@ class _DragProxyState extends State<_DragProxy> {
 }
 
 class _VerticalPointerState extends MultiDragPointerState {
-  _VerticalPointerState(Offset initialPosition) : super(initialPosition) {
+  _VerticalPointerState(Offset initialPosition, PointerDeviceKind kind)
+      : super(initialPosition, kind) {
     _resolveTimer = Timer(Duration(milliseconds: 150), () {
       resolve(GestureDisposition.accepted);
       _resolveTimer = null;
@@ -749,7 +750,7 @@ class _VerticalPointerState extends MultiDragPointerState {
 class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
   @override
   _VerticalPointerState createNewPointerState(PointerDownEvent event) {
-    return _VerticalPointerState(event.position);
+    return _VerticalPointerState(event.position, event.kind);
   }
 
   @override
