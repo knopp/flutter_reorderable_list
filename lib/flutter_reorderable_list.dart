@@ -127,8 +127,14 @@ class ReorderableListener extends StatelessWidget {
   }
 
   @protected
-  MultiDragGestureRecognizer createRecognizer() {
-    return _Recognizer();
+  MultiDragGestureRecognizer createRecognizer({
+    @required Object debugOwner,
+    PointerDeviceKind kind,
+  }) {
+    return _Recognizer(
+      debugOwner: debugOwner,
+      kind: kind,
+    );
   }
 
   void _startDragging({BuildContext context, PointerEvent event}) {
@@ -141,7 +147,7 @@ class ReorderableListener extends StatelessWidget {
           key: state.key,
           event: event,
           scrollable: scrollable,
-          recognizer: createRecognizer());
+          recognizer: createRecognizer(debugOwner: this, kind: event.kind));
     }
   }
 }
@@ -157,8 +163,12 @@ class DelayedReorderableListener extends ReorderableListener {
   final Duration delay;
 
   @protected
-  MultiDragGestureRecognizer createRecognizer() {
-    return DelayedMultiDragGestureRecognizer(delay: delay);
+  MultiDragGestureRecognizer createRecognizer({
+    @required Object debugOwner,
+    PointerDeviceKind kind,
+  }) {
+    return DelayedMultiDragGestureRecognizer(
+        delay: delay, debugOwner: debugOwner, kind: kind);
   }
 }
 
@@ -748,6 +758,11 @@ class _VerticalPointerState extends MultiDragPointerState {
 // when reordering items
 //
 class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
+  _Recognizer({
+    @required Object debugOwner,
+    PointerDeviceKind kind,
+  }) : super(debugOwner: debugOwner, kind: kind);
+
   @override
   _VerticalPointerState createNewPointerState(PointerDownEvent event) {
     return _VerticalPointerState(event.position, event.kind);
