@@ -10,9 +10,12 @@
 
 * Fix regression for CancellationToken
 
-
 ## [0.1.4]
 
 * Added `decoratePlaceholder` constructor property to allow customizing placeholder decoration
 * Haptic feedback on reorder is only done on iOS
 * Support SliverPadding
+
+## [0.1.5]
+
+* Fix compatibility with Flutter 1.22.0
