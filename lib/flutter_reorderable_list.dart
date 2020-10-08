@@ -611,7 +611,9 @@ class _ReorderableItemState extends State<ReorderableItem> {
   }
 
   void update() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
