@@ -312,7 +312,7 @@ class _ReorderableListState extends State<ReorderableList>
       double overdragMax = 20.0;
       double overdragCoef = 10.0;
 
-      MediaQueryData d = MediaQuery.of(context, nullOk: true);
+      MediaQueryData d = MediaQuery.of(context);
 
       double top = d?.padding?.top ?? 0.0;
       double bottom = this._scrollable.position.viewportDimension -
