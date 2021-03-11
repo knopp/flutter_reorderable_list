@@ -2,6 +2,7 @@ name: example
 description: Reorderable list view example
 author: Matej Knopp <matej.knopp@gmail.com>
 homepage: https://github.com/knopp/flutter_reorderable_list
+publish_to: none
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -12,7 +13,7 @@ homepage: https://github.com/knopp/flutter_reorderable_list
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   flutter:

@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' hide ReorderableList;
+import 'package:flutter/material.dart' hide ReorderableList;
 import 'package:flutter_reorderable_list/flutter_reorderable_list.dart';
 
 void main() => runApp(MyApp());
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -43,9 +43,9 @@ enum DraggingMode {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<ItemData> _items;
+  late List<ItemData> _items;
   _MyHomePageState() {
-    _items = List();
+    _items = [];
     for (int i = 0; i < 500; ++i) {
       String label = "List item $i";
       if (i == 5) {
@@ -154,10 +154,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class Item extends StatelessWidget {
   Item({
-    this.data,
-    this.isFirst,
-    this.isLast,
-    this.draggingMode,
+    required this.data,
+    required this.isFirst,
+    required this.isLast,
+    required this.draggingMode,
   });
 
   final ItemData data;

@@ -19,8 +19,8 @@ typedef void ReorderCompleteCallback(Key draggedItem);
 // (i.e. before and after shadow)
 class DecoratedPlaceholder {
   DecoratedPlaceholder({
-    this.offset,
-    this.widget,
+    required this.offset,
+    required this.widget,
   });
 
   // Height of decoration before widget
@@ -40,14 +40,14 @@ class CancellationToken {
     }
   }
 
-  final _callbacks = List<VoidCallback>();
+  final _callbacks = <VoidCallback>[];
 }
 
 class ReorderableList extends StatefulWidget {
   ReorderableList({
-    Key key,
-    @required this.child,
-    @required this.onReorder,
+    Key? key,
+    required this.child,
+    required this.onReorder,
     this.onReorderDone,
     this.cancellationToken,
     this.decoratePlaceholder = _defaultDecoratePlaceholder,
@@ -56,10 +56,10 @@ class ReorderableList extends StatefulWidget {
   final Widget child;
 
   final ReorderItemCallback onReorder;
-  final ReorderCompleteCallback onReorderDone;
+  final ReorderCompleteCallback? onReorderDone;
   final DecoratePlaceholder decoratePlaceholder;
 
-  final CancellationToken cancellationToken;
+  final CancellationToken? cancellationToken;
 
   @override
   State<StatefulWidget> createState() => new _ReorderableListState();
@@ -90,8 +90,8 @@ class ReorderableItem extends StatefulWidget {
   /// [key] must be unique key for every item. It must be stable and not change
   /// when items are reordered
   ReorderableItem({
-    @required Key key,
-    @required this.childBuilder,
+    required Key key,
+    required this.childBuilder,
   }) : super(key: key);
 
   final ReorderableItemChildBuilder childBuilder;
@@ -104,13 +104,13 @@ typedef ReorderableListenerCallback = bool Function();
 
 class ReorderableListener extends StatelessWidget {
   ReorderableListener({
-    Key key,
+    Key? key,
     this.child,
     this.canStart,
   }) : super(key: key);
-  final Widget child;
+  final Widget? child;
 
-  final ReorderableListenerCallback canStart;
+  final ReorderableListenerCallback? canStart;
 
   @override
   Widget build(BuildContext context) {
@@ -121,15 +121,15 @@ class ReorderableListener extends StatelessWidget {
   }
 
   void _routePointer(PointerEvent event, BuildContext context) {
-    if (canStart == null || canStart()) {
+    if (canStart == null || canStart!()) {
       _startDragging(context: context, event: event);
     }
   }
 
   @protected
   MultiDragGestureRecognizer createRecognizer({
-    @required Object debugOwner,
-    PointerDeviceKind kind,
+    required Object? debugOwner,
+    PointerDeviceKind? kind,
   }) {
     return _Recognizer(
       debugOwner: debugOwner,
@@ -137,15 +137,15 @@ class ReorderableListener extends StatelessWidget {
     );
   }
 
-  void _startDragging({BuildContext context, PointerEvent event}) {
-    _ReorderableItemState state =
+  void _startDragging({required BuildContext context, PointerEvent? event}) {
+    _ReorderableItemState? state =
         context.findAncestorStateOfType<_ReorderableItemState>();
     final scrollable = Scrollable.of(context);
-    final listState = _ReorderableListState.of(context);
+    final listState = _ReorderableListState.of(context)!;
     if (listState.dragging == null) {
       listState._startDragging(
-          key: state.key,
-          event: event,
+          key: state!.key,
+          event: event!,
           scrollable: scrollable,
           recognizer: createRecognizer(debugOwner: this, kind: event.kind));
     }
@@ -154,9 +154,9 @@ class ReorderableListener extends StatelessWidget {
 
 class DelayedReorderableListener extends ReorderableListener {
   DelayedReorderableListener({
-    Key key,
-    Widget child,
-    ReorderableListenerCallback canStart,
+    Key? key,
+    Widget? child,
+    ReorderableListenerCallback? canStart,
     this.delay = kLongPressTimeout,
   }) : super(key: key, child: child, canStart: canStart);
 
@@ -164,8 +164,8 @@ class DelayedReorderableListener extends ReorderableListener {
 
   @protected
   MultiDragGestureRecognizer createRecognizer({
-    @required Object debugOwner,
-    PointerDeviceKind kind,
+    required Object? debugOwner,
+    PointerDeviceKind? kind,
   }) {
     return DelayedMultiDragGestureRecognizer(
         delay: delay, debugOwner: debugOwner, kind: kind);
@@ -193,20 +193,20 @@ class _ReorderableListState extends State<ReorderableList>
   void initState() {
     super.initState();
     if (widget.cancellationToken != null) {
-      widget.cancellationToken._callbacks.add(this._cancel);
+      widget.cancellationToken!._callbacks.add(this._cancel);
     }
   }
 
   @override
   void dispose() {
     if (widget.cancellationToken != null) {
-      widget.cancellationToken._callbacks.remove(this._cancel);
+      widget.cancellationToken!._callbacks.remove(this._cancel);
     }
     _finalAnimation?.dispose();
     for (final c in _itemTranslations.values) {
       c.dispose();
     }
-    _scrolling = null;
+    _scrolling = false;
     _recognizer?.dispose();
     super.dispose();
   }
@@ -214,35 +214,35 @@ class _ReorderableListState extends State<ReorderableList>
   void _cancel() {
     if (_dragging != null) {
       if (_finalAnimation != null) {
-        _finalAnimation.dispose();
+        _finalAnimation!.dispose();
         _finalAnimation = null;
       }
 
-      final dragging = _dragging;
+      final dragging = _dragging!;
       _dragging = null;
-      _dragProxy.hide();
+      _dragProxy!.hide();
 
       var current = _items[_dragging];
       current?.update();
 
       if (widget.onReorderDone != null) {
-        widget.onReorderDone(dragging);
+        widget.onReorderDone!(dragging);
       }
     }
   }
 
   // Returns currently dragged key
-  Key get dragging => _dragging;
+  Key? get dragging => _dragging;
 
-  Key _dragging;
-  MultiDragGestureRecognizer _recognizer;
-  _DragProxyState _dragProxy;
+  Key? _dragging;
+  MultiDragGestureRecognizer? _recognizer;
+  _DragProxyState? _dragProxy;
 
   void _startDragging({
-    Key key,
-    PointerEvent event,
-    MultiDragGestureRecognizer recognizer,
-    ScrollableState scrollable,
+    Key? key,
+    required PointerEvent event,
+    MultiDragGestureRecognizer? recognizer,
+    ScrollableState? scrollable,
   }) {
     _scrollable = scrollable;
 
@@ -260,11 +260,11 @@ class _ReorderableListState extends State<ReorderableList>
     _lastReportedKey = null;
     _recognizer?.dispose();
     _recognizer = recognizer;
-    _recognizer.onStart = _dragStart;
-    _recognizer.addPointer(event);
+    _recognizer!.onStart = _dragStart;
+    _recognizer!.addPointer(event as PointerDownEvent);
   }
 
-  Key _maybeDragging;
+  Key? _maybeDragging;
 
   Drag _dragStart(Offset position) {
     if (_dragging == null && _maybeDragging != null) {
@@ -272,13 +272,13 @@ class _ReorderableListState extends State<ReorderableList>
       _maybeDragging = null;
     }
     _hapticFeedback();
-    final draggedItem = _items[_dragging];
+    final draggedItem = _items[_dragging]!;
     draggedItem.update();
-    _dragProxy.setWidget(
+    _dragProxy!.setWidget(
         draggedItem.widget
             .childBuilder(draggedItem.context, ReorderableItemState.dragProxy),
-        draggedItem.context.findRenderObject());
-    this._scrollable.position.addListener(this._scrolled);
+        draggedItem.context.findRenderObject() as RenderBox);
+    this._scrollable!.position.addListener(this._scrolled);
 
     return this;
   }
@@ -286,7 +286,7 @@ class _ReorderableListState extends State<ReorderableList>
   void _draggedItemWidgetUpdated() {
     final draggedItem = _items[_dragging];
     if (draggedItem != null) {
-      _dragProxy.updateWidget(draggedItem.widget
+      _dragProxy!.updateWidget(draggedItem.widget
           .childBuilder(draggedItem.context, ReorderableItemState.dragProxy));
     }
   }
@@ -296,44 +296,46 @@ class _ReorderableListState extends State<ReorderableList>
   }
 
   void update(DragUpdateDetails details) {
-    _dragProxy.offset += details.delta.dy;
+    _dragProxy!.offset += details.delta.dy;
     checkDragPosition();
     maybeScroll();
   }
 
-  ScrollableState _scrollable;
+  ScrollableState? _scrollable;
 
   void maybeScroll() async {
     if (!_scrolling && _scrollable != null && _dragging != null) {
-      final position = _scrollable.position;
+      final position = _scrollable!.position;
       double newOffset;
       int duration = 14; // in ms
       double step = 1.0;
       double overdragMax = 20.0;
       double overdragCoef = 10.0;
 
-      MediaQueryData d = MediaQuery.of(context, nullOk: true);
+      MediaQueryData d = MediaQuery.of(context);
 
-      double top = d?.padding?.top ?? 0.0;
-      double bottom = this._scrollable.position.viewportDimension -
-          (d?.padding?.bottom ?? 0.0);
+      double top = d.padding.top;
+      double bottom =
+          this._scrollable!.position.viewportDimension - d.padding.bottom;
 
-      if (_dragProxy.offset < top &&
+      if (_dragProxy!.offset < top &&
           position.pixels > position.minScrollExtent) {
-        final overdrag = max(top - _dragProxy.offset, overdragMax);
+        final overdrag = max(top - _dragProxy!.offset, overdragMax);
         newOffset = max(position.minScrollExtent,
             position.pixels - step * overdrag / overdragCoef);
-      } else if (_dragProxy.offset + _dragProxy.height > bottom &&
+      } else if (_dragProxy!.offset + _dragProxy!.height > bottom &&
           position.pixels < position.maxScrollExtent) {
         final overdrag = max<double>(
-            _dragProxy.offset + _dragProxy.height - bottom, overdragMax);
+            _dragProxy!.offset + _dragProxy!.height - bottom, overdragMax);
         newOffset = min(position.maxScrollExtent,
             position.pixels + step * overdrag / overdragCoef);
+      } else {
+        return;
       }
 
-      if (newOffset != null && (newOffset - position.pixels).abs() >= 1.0) {
+      if ((newOffset - position.pixels).abs() >= 1.0) {
         _scrolling = true;
-        await this._scrollable.position.animateTo(newOffset,
+        await this._scrollable!.position.animateTo(newOffset,
             duration: Duration(milliseconds: duration), curve: Curves.linear);
         _scrolling = false;
         if (_dragging != null) {
@@ -350,7 +352,7 @@ class _ReorderableListState extends State<ReorderableList>
     end(null);
   }
 
-  end(DragEndDetails details) async {
+  end(DragEndDetails? details) async {
     if (_dragging == null) {
       return;
     }
@@ -359,7 +361,7 @@ class _ReorderableListState extends State<ReorderableList>
     if (_scrolling) {
       var prevDragging = _dragging;
       _dragging = null;
-      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
         _dragging = prevDragging;
         end(details);
       });
@@ -367,21 +369,21 @@ class _ReorderableListState extends State<ReorderableList>
     }
 
     if (_scheduledRebuild) {
-      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
         if (mounted) end(details);
       });
       return;
     }
 
-    this._scrollable.position.removeListener(this._scrolled);
+    this._scrollable!.position.removeListener(this._scrolled);
 
     var current = _items[_dragging];
     if (current == null) return;
 
     final originalOffset = _itemOffset(current);
-    final dragProxyOffset = _dragProxy.offset;
+    final dragProxyOffset = _dragProxy!.offset;
 
-    _dragProxy.updateWidget(current.widget
+    _dragProxy!.updateWidget(current.widget
         .childBuilder(current.context, ReorderableItemState.dragProxyFinished));
 
     _finalAnimation = new AnimationController(
@@ -391,29 +393,29 @@ class _ReorderableListState extends State<ReorderableList>
         value: 0.0,
         duration: Duration(milliseconds: 300));
 
-    _finalAnimation.addListener(() {
-      _dragProxy.offset =
-          lerpDouble(dragProxyOffset, originalOffset, _finalAnimation.value);
-      _dragProxy.decorationOpacity = 1.0 - _finalAnimation.value;
+    _finalAnimation!.addListener(() {
+      _dragProxy!.offset =
+          lerpDouble(dragProxyOffset, originalOffset, _finalAnimation!.value)!;
+      _dragProxy!.decorationOpacity = 1.0 - _finalAnimation!.value;
     });
 
     _recognizer?.dispose();
     _recognizer = null;
 
-    await _finalAnimation.animateTo(1.0, curve: Curves.easeOut);
+    await _finalAnimation!.animateTo(1.0, curve: Curves.easeOut);
 
     if (_finalAnimation != null) {
-      _finalAnimation.dispose();
+      _finalAnimation!.dispose();
       _finalAnimation = null;
 
-      final dragging = _dragging;
+      final dragging = _dragging!;
       _dragging = null;
-      _dragProxy.hide();
+      _dragProxy!.hide();
       current.update();
       _scrollable = null;
 
       if (widget.onReorderDone != null) {
-        widget.onReorderDone(dragging);
+        widget.onReorderDone!(dragging);
       }
     }
   }
@@ -428,16 +430,16 @@ class _ReorderableListState extends State<ReorderableList>
     }
 
     final draggingTop = _itemOffset(draggingState);
-    final draggingHeight = draggingState.context.size.height;
+    final draggingHeight = draggingState.context.size!.height;
 
-    _ReorderableItemState closest;
+    _ReorderableItemState? closest;
     double closestDistance = 0.0;
 
     // These callbacks will be invoked on successful reorder, they will ensure that
     // reordered items appear on their old position and animate to new one
-    List<Function> onReorderApproved = new List();
+    List<Function> onReorderApproved = [];
 
-    if (_dragProxy.offset < draggingTop) {
+    if (_dragProxy!.offset < draggingTop) {
       for (_ReorderableItemState item in _items.values) {
         if (item.key == _dragging) continue;
         final itemTop = _itemOffset(item);
@@ -445,19 +447,19 @@ class _ReorderableListState extends State<ReorderableList>
         final itemBottom = itemTop +
             (item.context.findRenderObject() as RenderBox).size.height / 2;
 
-        if (_dragProxy.offset < itemBottom) {
+        if (_dragProxy!.offset < itemBottom) {
           onReorderApproved.add(() {
             _adjustItemTranslation(item.key, -draggingHeight, draggingHeight);
           });
           if (closest == null ||
-              closestDistance > (itemBottom - _dragProxy.offset)) {
+              closestDistance > (itemBottom - _dragProxy!.offset)) {
             closest = item;
-            closestDistance = (itemBottom - _dragProxy.offset);
+            closestDistance = (itemBottom - _dragProxy!.offset);
           }
         }
       }
     } else {
-      double draggingBottom = _dragProxy.offset + draggingHeight;
+      double draggingBottom = _dragProxy!.offset + draggingHeight;
 
       for (_ReorderableItemState item in _items.values) {
         if (item.key == _dragging) continue;
@@ -484,21 +486,20 @@ class _ReorderableListState extends State<ReorderableList>
     if (closest != null &&
         closest.key != _dragging &&
         closest.key != _lastReportedKey) {
-      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
         _scheduledRebuild = false;
       });
       _scheduledRebuild = true;
       _lastReportedKey = closest.key;
-      if (widget.onReorder != null) {
-        if (widget.onReorder(_dragging, closest.key)) {
-          if (Platform.isIOS) {
-            _hapticFeedback();
-          }
-          for (final f in onReorderApproved) {
-            f();
-          }
-          _lastReportedKey = null;
+
+      if (widget.onReorder(_dragging!, closest.key)) {
+        if (Platform.isIOS) {
+          _hapticFeedback();
         }
+        for (final f in onReorderApproved) {
+          f();
+        }
+        _lastReportedKey = null;
       }
     }
   }
@@ -508,10 +509,11 @@ class _ReorderableListState extends State<ReorderableList>
   }
 
   bool _scheduledRebuild = false;
-  Key _lastReportedKey;
+  Key? _lastReportedKey;
   //
 
-  final _items = new HashMap<Key, _ReorderableItemState>();
+  final HashMap<Key?, _ReorderableItemState> _items =
+      new HashMap<Key, _ReorderableItemState>();
 
   void registerItem(_ReorderableItemState item) {
     _items[item.key] = item;
@@ -528,7 +530,7 @@ class _ReorderableListState extends State<ReorderableList>
         .dy;
   }
 
-  static _ReorderableListState of(BuildContext context) {
+  static _ReorderableListState? of(BuildContext context) {
     return context.findAncestorStateOfType<_ReorderableListState>();
   }
 
@@ -540,7 +542,7 @@ class _ReorderableListState extends State<ReorderableList>
     if (!_itemTranslations.containsKey(key))
       return 0.0;
     else
-      return _itemTranslations[key].value;
+      return _itemTranslations[key]!.value;
   }
 
   void _adjustItemTranslation(Key key, double delta, double max) {
@@ -576,7 +578,7 @@ class _ReorderableListState extends State<ReorderableList>
     newController.animateTo(0.0, curve: Curves.easeInOut);
   }
 
-  AnimationController _finalAnimation;
+  AnimationController? _finalAnimation;
 }
 
 class _ReorderableItemState extends State<ReorderableItem> {
@@ -587,9 +589,9 @@ class _ReorderableItemState extends State<ReorderableItem> {
     // super.build(context);
     _listState = _ReorderableListState.of(context);
 
-    _listState.registerItem(this);
-    bool dragging = _listState.dragging == key;
-    double translation = _listState.itemTranslation(key);
+    _listState!.registerItem(this);
+    bool dragging = _listState!.dragging == key;
+    double translation = _listState!.itemTranslation(key);
     return Transform(
       transform: new Matrix4.translationValues(0.0, translation, 0.0),
       child: widget.childBuilder(
@@ -605,8 +607,8 @@ class _ReorderableItemState extends State<ReorderableItem> {
     super.didUpdateWidget(oldWidget);
 
     _listState = _ReorderableListState.of(context);
-    if (_listState.dragging == this.key) {
-      _listState._draggedItemWidgetUpdated();
+    if (_listState!.dragging == this.key) {
+      _listState!._draggedItemWidgetUpdated();
     }
   }
 
@@ -623,7 +625,7 @@ class _ReorderableItemState extends State<ReorderableItem> {
     super.deactivate();
   }
 
-  _ReorderableListState _listState;
+  _ReorderableListState? _listState;
 }
 
 //
@@ -640,10 +642,10 @@ class _DragProxy extends StatefulWidget {
 }
 
 class _DragProxyState extends State<_DragProxy> {
-  Widget _widget;
-  Size _size;
-  double _offset;
-  double _offsetX;
+  Widget? _widget;
+  Size _size = Size.zero;
+  double _offset = 0;
+  double _offsetX = 0;
 
   _DragProxyState();
 
@@ -651,8 +653,8 @@ class _DragProxyState extends State<_DragProxy> {
     setState(() {
       _decorationOpacity = 1.0;
       _widget = widget;
-      final state = _ReorderableListState.of(context);
-      RenderBox renderBox = state.context.findRenderObject();
+      final state = _ReorderableListState.of(context)!;
+      RenderBox renderBox = state.context.findRenderObject() as RenderBox;
       final offset = position.localToGlobal(Offset.zero, ancestor: renderBox);
       _offsetX = offset.dx;
       _offset = offset.dy;
@@ -670,11 +672,11 @@ class _DragProxyState extends State<_DragProxy> {
     });
   }
 
-  get offset => _offset;
+  double get offset => _offset;
 
-  get height => _size.height;
+  double get height => _size.height;
 
-  double _decorationOpacity;
+  double _decorationOpacity = 0.0;
 
   set decorationOpacity(double val) {
     setState(() {
@@ -690,14 +692,14 @@ class _DragProxyState extends State<_DragProxy> {
 
   @override
   Widget build(BuildContext context) {
-    final state = _ReorderableListState.of(context);
+    final state = _ReorderableListState.of(context)!;
     state._dragProxy = this;
 
-    if (_widget != null && _size != null && _offset != null) {
+    if (_widget != null) {
       final w = IgnorePointer(
         child: MediaQuery.removePadding(
           context: context,
-          child: _widget,
+          child: _widget!,
           removeTop: true,
           removeBottom: true,
         ),
@@ -735,7 +737,7 @@ class _VerticalPointerState extends MultiDragPointerState {
   @override
   void checkForResolutionAfterMove() {
     assert(pendingDelta != null);
-    if (pendingDelta.dy.abs() > pendingDelta.dx.abs())
+    if (pendingDelta!.dy.abs() > pendingDelta!.dx.abs())
       resolve(GestureDisposition.accepted);
   }
 
@@ -752,7 +754,7 @@ class _VerticalPointerState extends MultiDragPointerState {
     super.dispose();
   }
 
-  Timer _resolveTimer;
+  Timer? _resolveTimer;
 }
 
 //
@@ -761,8 +763,8 @@ class _VerticalPointerState extends MultiDragPointerState {
 //
 class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
   _Recognizer({
-    @required Object debugOwner,
-    PointerDeviceKind kind,
+    required Object? debugOwner,
+    PointerDeviceKind? kind,
   }) : super(debugOwner: debugOwner, kind: kind);
 
   @override

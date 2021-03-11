@@ -19,3 +19,7 @@
 ## [0.1.5]
 
 * Fix compatibility with Flutter 1.22.0
+
+## [1.0.0]
+
+* Migrate to NNBD

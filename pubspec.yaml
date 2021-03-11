@@ -1,19 +1,19 @@
 name: flutter_reorderable_list
 description: Reorderable list for flutter.
-version: 0.1.5
+version: 1.0.0
 homepage: https://github.com/knopp/flutter_reorderable_list
 
 environment:
-  sdk: ">=2.0.0 <3.0.0"
-  flutter: ">=1.22.0 < 2.0.0"
+  sdk: '>=2.12.0 <3.0.0'
+  flutter: ">= 2.0.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
+  # flutter_test:
+    # sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
