@@ -10,3 +10,9 @@ build/
 ios/.generated/
 ios/Flutter/Generated.xcconfig
 ios/Runner/GeneratedPluginRegistrant.*
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
