@@ -107,16 +107,19 @@ class ReorderableListener extends StatelessWidget {
     Key? key,
     this.child,
     this.canStart,
+    this.behavior = HitTestBehavior.deferToChild,
   }) : super(key: key);
   final Widget? child;
 
   final ReorderableListenerCallback? canStart;
+  final HitTestBehavior behavior;
 
   @override
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (PointerEvent event) => _routePointer(event, context),
       child: child,
+      behavior: behavior,
     );
   }
 
