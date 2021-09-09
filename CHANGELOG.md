@@ -23,3 +23,7 @@
 ## [1.0.0]
 
 * Migrate to NNBD
+
+## [1.1.0]
+
+* Migration to Flutter 2.5
