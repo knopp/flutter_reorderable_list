@@ -30,7 +30,9 @@ class DecoratedPlaceholder {
 
 // Decorates current placeholder widget
 typedef DecoratedPlaceholder DecoratePlaceholder(
-    Widget widget, double decorationOpacity);
+  Widget widget,
+  double decorationOpacity,
+);
 
 // Can be used to cancel reordering (i.e. when underlying data changed)
 class CancellationToken {
@@ -62,7 +64,7 @@ class ReorderableList extends StatefulWidget {
   final CancellationToken? cancellationToken;
 
   @override
-  State<StatefulWidget> createState() => new _ReorderableListState();
+  State<StatefulWidget> createState() => _ReorderableListState();
 }
 
 enum ReorderableItemState {
@@ -81,7 +83,9 @@ enum ReorderableItemState {
 }
 
 typedef Widget ReorderableItemChildBuilder(
-    BuildContext context, ReorderableItemState state);
+  BuildContext context,
+  ReorderableItemState state,
+);
 
 class ReorderableItem extends StatefulWidget {
   /// [key] must be unique key for every item. It must be stable and not change
@@ -94,7 +98,7 @@ class ReorderableItem extends StatefulWidget {
   final ReorderableItemChildBuilder childBuilder;
 
   @override
-  createState() => new _ReorderableItemState();
+  createState() => _ReorderableItemState();
 }
 
 typedef ReorderableListenerCallback = bool Function();
@@ -186,12 +190,9 @@ class _ReorderableListState extends State<ReorderableList>
     with TickerProviderStateMixin, Drag {
   @override
   Widget build(BuildContext context) {
-    return new Stack(
+    return Stack(
       fit: StackFit.passthrough,
-      children: <Widget>[
-        widget.child,
-        new _DragProxy(widget.decoratePlaceholder)
-      ],
+      children: <Widget>[widget.child, _DragProxy(widget.decoratePlaceholder)],
     );
   }
 
@@ -396,7 +397,7 @@ class _ReorderableListState extends State<ReorderableList>
     _dragProxy!.updateWidget(current.widget
         .childBuilder(current.context, ReorderableItemState.dragProxyFinished));
 
-    _finalAnimation = new AnimationController(
+    _finalAnimation = AnimationController(
         vsync: this,
         lowerBound: 0.0,
         upperBound: 1.0,
@@ -526,7 +527,7 @@ class _ReorderableListState extends State<ReorderableList>
   //
 
   final HashMap<Key?, _ReorderableItemState> _items =
-      new HashMap<Key, _ReorderableItemState>();
+      HashMap<Key, _ReorderableItemState>();
 
   void registerItem(_ReorderableItemState item) {
     _items[item.key] = item;
@@ -549,7 +550,7 @@ class _ReorderableListState extends State<ReorderableList>
 
   //
 
-  Map<Key, AnimationController> _itemTranslations = new HashMap();
+  Map<Key, AnimationController> _itemTranslations = HashMap();
 
   double itemTranslation(Key key) {
     if (!_itemTranslations.containsKey(key))
@@ -569,7 +570,7 @@ class _ReorderableListState extends State<ReorderableList>
 
     current += delta;
 
-    final newController = new AnimationController(
+    final newController = AnimationController(
         vsync: this,
         lowerBound: current < 0.0 ? -max : 0.0,
         upperBound: current < 0.0 ? 0.0 : max,
@@ -606,7 +607,7 @@ class _ReorderableItemState extends State<ReorderableItem> {
     bool dragging = _listState!.dragging == key;
     double translation = _listState!.itemTranslation(key);
     return Transform(
-      transform: new Matrix4.translationValues(0.0, translation, 0.0),
+      transform: Matrix4.translationValues(0.0, translation, 0.0),
       child: widget.childBuilder(
           context,
           dragging
@@ -645,7 +646,7 @@ class _DragProxy extends StatefulWidget {
   final DecoratePlaceholder decoratePlaceholder;
 
   @override
-  State<StatefulWidget> createState() => new _DragProxyState();
+  State<StatefulWidget> createState() => _DragProxyState();
 
   _DragProxy(this.decoratePlaceholder);
 }
@@ -723,7 +724,7 @@ class _DragProxyState extends State<_DragProxy> {
         top: offset - decoratedPlaceholder.offset,
       );
     } else {
-      return new Container(width: 0.0, height: 0.0);
+      return Container(width: 0.0, height: 0.0);
     }
   }
 
