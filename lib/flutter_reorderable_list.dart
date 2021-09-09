@@ -35,8 +35,8 @@ typedef DecoratedPlaceholder DecoratePlaceholder(
 // Can be used to cancel reordering (i.e. when underlying data changed)
 class CancellationToken {
   void cancelDragging() {
-    for (final c in _callbacks) {
-      c();
+    for (final callback in _callbacks) {
+      callback();
     }
   }
 
@@ -70,7 +70,7 @@ enum ReorderableItemState {
   normal,
 
   /// Placeholder, used at position of currently dragged item;
-  /// Shoud have same dimensions as [normal] but hidden content
+  /// Should have same dimensions as [normal] but hidden content
   placeholder,
 
   // Proxy item displayed during dragging
@@ -79,9 +79,6 @@ enum ReorderableItemState {
   // Proxy item displayed during finishing animation
   dragProxyFinished
 }
-
-//
-//
 
 typedef Widget ReorderableItemChildBuilder(
     BuildContext context, ReorderableItemState state);
@@ -129,25 +126,35 @@ class ReorderableListener extends StatelessWidget {
   @protected
   MultiDragGestureRecognizer createRecognizer({
     required Object? debugOwner,
-    PointerDeviceKind? kind,
+    Set<PointerDeviceKind>? supportedDevices,
   }) {
     return _Recognizer(
       debugOwner: debugOwner,
-      kind: kind,
+      supportedDevices: supportedDevices,
     );
   }
 
   void _startDragging({required BuildContext context, PointerEvent? event}) {
     _ReorderableItemState? state =
         context.findAncestorStateOfType<_ReorderableItemState>();
+
     final scrollable = Scrollable.of(context);
+
     final listState = _ReorderableListState.of(context)!;
+
     if (listState.dragging == null) {
       listState._startDragging(
-          key: state!.key,
-          event: event!,
-          scrollable: scrollable,
-          recognizer: createRecognizer(debugOwner: this, kind: event.kind));
+        key: state!.key,
+        event: event!,
+        scrollable: scrollable,
+        recognizer: createRecognizer(
+          debugOwner: this,
+          supportedDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+          },
+        ),
+      );
     }
   }
 }
@@ -165,16 +172,15 @@ class DelayedReorderableListener extends ReorderableListener {
   @protected
   MultiDragGestureRecognizer createRecognizer({
     required Object? debugOwner,
-    PointerDeviceKind? kind,
+    Set<PointerDeviceKind>? supportedDevices,
   }) {
     return DelayedMultiDragGestureRecognizer(
-        delay: delay, debugOwner: debugOwner, kind: kind);
+      delay: delay,
+      debugOwner: debugOwner,
+      supportedDevices: supportedDevices,
+    );
   }
 }
-
-//
-//
-//
 
 class _ReorderableListState extends State<ReorderableList>
     with TickerProviderStateMixin, Drag {
@@ -306,6 +312,7 @@ class _ReorderableListState extends State<ReorderableList>
   void maybeScroll() async {
     if (!_scrolling && _scrollable != null && _dragging != null) {
       final position = _scrollable!.position;
+
       double newOffset;
       int duration = 14; // in ms
       double step = 1.0;
@@ -321,8 +328,11 @@ class _ReorderableListState extends State<ReorderableList>
       if (_dragProxy!.offset < top &&
           position.pixels > position.minScrollExtent) {
         final overdrag = max(top - _dragProxy!.offset, overdragMax);
-        newOffset = max(position.minScrollExtent,
-            position.pixels - step * overdrag / overdragCoef);
+
+        newOffset = max(
+          position.minScrollExtent,
+          position.pixels - step * overdrag / overdragCoef,
+        );
       } else if (_dragProxy!.offset + _dragProxy!.height > bottom &&
           position.pixels < position.maxScrollExtent) {
         final overdrag = max<double>(
@@ -394,8 +404,11 @@ class _ReorderableListState extends State<ReorderableList>
         duration: Duration(milliseconds: 300));
 
     _finalAnimation!.addListener(() {
-      _dragProxy!.offset =
-          lerpDouble(dragProxyOffset, originalOffset, _finalAnimation!.value)!;
+      _dragProxy!.offset = lerpDouble(
+        dragProxyOffset,
+        originalOffset,
+        _finalAnimation!.value,
+      )!;
       _dragProxy!.decorationOpacity = 1.0 - _finalAnimation!.value;
     });
 
@@ -628,10 +641,6 @@ class _ReorderableItemState extends State<ReorderableItem> {
   _ReorderableListState? _listState;
 }
 
-//
-//
-//
-
 class _DragProxy extends StatefulWidget {
   final DecoratePlaceholder decoratePlaceholder;
 
@@ -761,11 +770,14 @@ class _VerticalPointerState extends MultiDragPointerState {
 // VerticalDragGestureRecognizer waits for kTouchSlop to be reached; We don't want that
 // when reordering items
 //
-class _Recognizer extends MultiDragGestureRecognizer<_VerticalPointerState> {
+class _Recognizer extends MultiDragGestureRecognizer {
   _Recognizer({
     required Object? debugOwner,
-    PointerDeviceKind? kind,
-  }) : super(debugOwner: debugOwner, kind: kind);
+    Set<PointerDeviceKind>? supportedDevices,
+  }) : super(
+          debugOwner: debugOwner,
+          supportedDevices: supportedDevices,
+        );
 
   @override
   _VerticalPointerState createNewPointerState(PointerDownEvent event) {
@@ -790,18 +802,20 @@ DecoratedPlaceholder _defaultDecoratePlaceholder(
               child: Container(
                 height: decorationHeight,
                 decoration: BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(
-                            color: Color(0x50000000),
-                            width: 1.0 / mq.devicePixelRatio)),
-                    gradient: LinearGradient(
-                        begin: Alignment(0.0, -1.0),
-                        end: Alignment(0.0, 1.0),
-                        colors: <Color>[
-                          Color(0x00000000),
-                          Color(0x10000000),
-                          Color(0x30000000)
-                        ])),
+                  border: Border(
+                      bottom: BorderSide(
+                          color: Color(0x50000000),
+                          width: 1.0 / mq.devicePixelRatio)),
+                  gradient: LinearGradient(
+                    begin: Alignment(0.0, -1.0),
+                    end: Alignment(0.0, 1.0),
+                    colors: <Color>[
+                      Color(0x00000000),
+                      Color(0x10000000),
+                      Color(0x30000000)
+                    ],
+                  ),
+                ),
               )),
           widget,
           Opacity(
@@ -809,21 +823,25 @@ DecoratedPlaceholder _defaultDecoratePlaceholder(
               child: Container(
                 height: decorationHeight,
                 decoration: BoxDecoration(
-                    border: Border(
-                        top: BorderSide(
-                            color: Color(0x50000000),
-                            width: 1.0 / mq.devicePixelRatio)),
-                    gradient: LinearGradient(
-                        begin: Alignment(0.0, -1.0),
-                        end: Alignment(0.0, 1.0),
-                        colors: <Color>[
-                          Color(0x30000000),
-                          Color(0x10000000),
-                          Color(0x00000000)
-                        ])),
+                  border: Border(
+                      top: BorderSide(
+                          color: Color(0x50000000),
+                          width: 1.0 / mq.devicePixelRatio)),
+                  gradient: LinearGradient(
+                    begin: Alignment(0.0, -1.0),
+                    end: Alignment(0.0, 1.0),
+                    colors: <Color>[
+                      Color(0x30000000),
+                      Color(0x10000000),
+                      Color(0x00000000)
+                    ],
+                  ),
+                ),
               )),
         ]);
   });
   return DecoratedPlaceholder(
-      offset: decorationHeight, widget: decoratedWidget);
+    offset: decorationHeight,
+    widget: decoratedWidget,
+  );
 }
