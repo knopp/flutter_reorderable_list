@@ -1,7 +1,6 @@
 library flutter_reorderable_list;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -736,8 +735,9 @@ class _DragProxyState extends State<_DragProxy> {
 }
 
 class _VerticalPointerState extends MultiDragPointerState {
-  _VerticalPointerState(Offset initialPosition, PointerDeviceKind kind)
-      : super(initialPosition, kind) {
+  _VerticalPointerState(Offset initialPosition, PointerDeviceKind kind,
+      DeviceGestureSettings? gestureSettings)
+      : super(initialPosition, kind, gestureSettings) {
     _resolveTimer = Timer(Duration(milliseconds: 150), () {
       resolve(GestureDisposition.accepted);
       _resolveTimer = null;
@@ -782,7 +782,7 @@ class _Recognizer extends MultiDragGestureRecognizer {
 
   @override
   _VerticalPointerState createNewPointerState(PointerDownEvent event) {
-    return _VerticalPointerState(event.position, event.kind);
+    return _VerticalPointerState(event.position, event.kind, gestureSettings);
   }
 
   @override
