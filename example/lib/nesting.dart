@@ -256,7 +256,7 @@ class _ChannelSectionState extends State<ChannelSection> {
     );
   }
 
-  Widget _buildChannel(BuildContext context) {
+  Widget _buildChannel(BuildContext context, Channel v) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: SizedBox(
@@ -353,7 +353,7 @@ So here I avoid Opacity nesting to avoid this issue.
                                 : 1.0,
                             child: Container(
                               decoration: decoration,
-                              child: _buildChannel(context),
+                              child: _buildChannel(context, v),
                             ),
                           ),
                         );
