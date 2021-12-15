@@ -91,9 +91,11 @@ class ReorderableItem extends StatefulWidget {
   ReorderableItem({
     required Key key,
     required this.childBuilder,
+    this.listKey,
   }) : super(key: key);
 
   final ReorderableItemChildBuilder childBuilder;
+  final GlobalKey<_ReorderableListState>? listKey;
 
   @override
   createState() => _ReorderableItemState();
@@ -106,10 +108,13 @@ class ReorderableListener extends StatelessWidget {
     Key? key,
     this.child,
     this.canStart,
+    this.itemKey,
   }) : super(key: key);
   final Widget? child;
 
   final ReorderableListenerCallback? canStart;
+
+  final GlobalKey<_ReorderableItemState>? itemKey;
 
   @override
   Widget build(BuildContext context) {
@@ -137,18 +142,31 @@ class ReorderableListener extends StatelessWidget {
   }
 
   void _startDragging({required BuildContext context, PointerEvent? event}) {
-    _ReorderableItemState? state =
-        context.findAncestorStateOfType<_ReorderableItemState>();
+    _ReorderableItemState? itemState;
+    if (itemKey != null) {
+      itemState = itemKey!.currentState;
+    } else {
+      itemState = context.findAncestorStateOfType<_ReorderableItemState>();
+    }
+    if (itemState == null) {
+      return;
+    }
 
-    final scrollable = Scrollable.of(context);
-
-    final listState = _ReorderableListState.of(context)!;
+    _ReorderableListState? listState;
+    if (itemState.widget.listKey != null) {
+      listState = itemState.widget.listKey!.currentState;
+    } else {
+      listState = _ReorderableListState.of(context);
+    }
+    if (listState == null) {
+      return;
+    }
 
     if (listState.dragging == null) {
       listState._startDragging(
-        key: state!.key,
+        key: itemState.key,
         event: event!,
-        scrollable: scrollable,
+        scrollable: Scrollable.of(context),
         recognizer: createRecognizer(
           debugOwner: this,
           supportedDevices: {
@@ -600,7 +618,12 @@ class _ReorderableItemState extends State<ReorderableItem> {
   @override
   Widget build(BuildContext context) {
     // super.build(context);
-    _listState = _ReorderableListState.of(context);
+
+    if (widget.listKey != null) {
+      _listState = widget.listKey!.currentState;
+    } else {
+      _listState = _ReorderableListState.of(context);
+    }
 
     _listState!.registerItem(this);
     bool dragging = _listState!.dragging == key;
@@ -619,7 +642,12 @@ class _ReorderableItemState extends State<ReorderableItem> {
   void didUpdateWidget(ReorderableItem oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    _listState = _ReorderableListState.of(context);
+    if (widget.listKey != null) {
+      _listState = widget.listKey!.currentState;
+    } else {
+      _listState = _ReorderableListState.of(context);
+    }
+
     if (_listState!.dragging == this.key) {
       _listState!._draggedItemWidgetUpdated();
     }
