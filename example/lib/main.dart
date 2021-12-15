@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart' hide ReorderableList;
 import 'package:flutter_reorderable_list/flutter_reorderable_list.dart';
+import 'package:reorderable_list/drawer.dart';
+
+import 'nesting.dart';
 
 void main() => runApp(const MyApp());
 
@@ -15,7 +18,11 @@ class MyApp extends StatelessWidget {
         dividerColor: const Color(0x50000000),
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Reorderable List'),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const MyHomePage(title: 'Flutter Reorderable List'),
+        '/nesting': (context) => const NestingExample(),
+      },
     );
   }
 }
@@ -93,6 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const NavigationDrawer(),
       body: ReorderableList(
         onReorder: _reorderCallback,
         onReorderDone: _reorderDone,
