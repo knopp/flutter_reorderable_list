@@ -62,10 +62,10 @@ class ReorderableList extends StatefulWidget {
   final CancellationToken? cancellationToken;
 
   @override
-  State<StatefulWidget> createState() => _ReorderableListState();
+  State<StatefulWidget> createState() => ReorderableListState();
 }
 
-enum ReorderableItemState {
+enum ReorderableItemDisplayState {
   /// Normal item inside list
   normal,
 
@@ -82,7 +82,7 @@ enum ReorderableItemState {
 
 typedef Widget ReorderableItemChildBuilder(
   BuildContext context,
-  ReorderableItemState state,
+  ReorderableItemDisplayState state,
 );
 
 class ReorderableItem extends StatefulWidget {
@@ -95,10 +95,10 @@ class ReorderableItem extends StatefulWidget {
   }) : super(key: key);
 
   final ReorderableItemChildBuilder childBuilder;
-  final GlobalKey<_ReorderableListState>? listKey;
+  final GlobalKey<ReorderableListState>? listKey;
 
   @override
-  createState() => _ReorderableItemState();
+  createState() => ReorderableItemState();
 }
 
 typedef ReorderableListenerCallback = bool Function();
@@ -114,7 +114,7 @@ class ReorderableListener extends StatelessWidget {
 
   final ReorderableListenerCallback? canStart;
 
-  final GlobalKey<_ReorderableItemState>? itemKey;
+  final GlobalKey<ReorderableItemState>? itemKey;
 
   @override
   Widget build(BuildContext context) {
@@ -142,21 +142,21 @@ class ReorderableListener extends StatelessWidget {
   }
 
   void _startDragging({required BuildContext context, PointerEvent? event}) {
-    _ReorderableItemState? itemState;
+    ReorderableItemState? itemState;
     if (itemKey != null) {
       itemState = itemKey!.currentState;
     } else {
-      itemState = context.findAncestorStateOfType<_ReorderableItemState>();
+      itemState = context.findAncestorStateOfType<ReorderableItemState>();
     }
     if (itemState == null) {
       return;
     }
 
-    _ReorderableListState? listState;
+    ReorderableListState? listState;
     if (itemState.widget.listKey != null) {
       listState = itemState.widget.listKey!.currentState;
     } else {
-      listState = _ReorderableListState.of(context);
+      listState = ReorderableListState.of(context);
     }
     if (listState == null) {
       return;
@@ -202,7 +202,7 @@ class DelayedReorderableListener extends ReorderableListener {
   }
 }
 
-class _ReorderableListState extends State<ReorderableList>
+class ReorderableListState extends State<ReorderableList>
     with TickerProviderStateMixin, Drag {
   @override
   Widget build(BuildContext context) {
@@ -298,8 +298,8 @@ class _ReorderableListState extends State<ReorderableList>
     final draggedItem = _items[_dragging]!;
     draggedItem.update();
     _dragProxy!.setWidget(
-        draggedItem.widget
-            .childBuilder(draggedItem.context, ReorderableItemState.dragProxy),
+        draggedItem.widget.childBuilder(
+            draggedItem.context, ReorderableItemDisplayState.dragProxy),
         draggedItem.context.findRenderObject() as RenderBox);
     this._scrollable!.position.addListener(this._scrolled);
 
@@ -309,8 +309,8 @@ class _ReorderableListState extends State<ReorderableList>
   void _draggedItemWidgetUpdated() {
     final draggedItem = _items[_dragging];
     if (draggedItem != null) {
-      _dragProxy!.updateWidget(draggedItem.widget
-          .childBuilder(draggedItem.context, ReorderableItemState.dragProxy));
+      _dragProxy!.updateWidget(draggedItem.widget.childBuilder(
+          draggedItem.context, ReorderableItemDisplayState.dragProxy));
     }
   }
 
@@ -410,8 +410,8 @@ class _ReorderableListState extends State<ReorderableList>
     final originalOffset = _itemOffset(current);
     final dragProxyOffset = _dragProxy!.offset;
 
-    _dragProxy!.updateWidget(current.widget
-        .childBuilder(current.context, ReorderableItemState.dragProxyFinished));
+    _dragProxy!.updateWidget(current.widget.childBuilder(
+        current.context, ReorderableItemDisplayState.dragProxyFinished));
 
     _finalAnimation = AnimationController(
         vsync: this,
@@ -462,7 +462,7 @@ class _ReorderableListState extends State<ReorderableList>
     final draggingTop = _itemOffset(draggingState);
     final draggingHeight = draggingState.context.size!.height;
 
-    _ReorderableItemState? closest;
+    ReorderableItemState? closest;
     double closestDistance = 0.0;
 
     // These callbacks will be invoked on successful reorder, they will ensure that
@@ -470,7 +470,7 @@ class _ReorderableListState extends State<ReorderableList>
     List<Function> onReorderApproved = [];
 
     if (_dragProxy!.offset < draggingTop) {
-      for (_ReorderableItemState item in _items.values) {
+      for (ReorderableItemState item in _items.values) {
         if (item.key == _dragging) continue;
         final itemTop = _itemOffset(item);
         if (itemTop > draggingTop) continue;
@@ -491,7 +491,7 @@ class _ReorderableListState extends State<ReorderableList>
     } else {
       double draggingBottom = _dragProxy!.offset + draggingHeight;
 
-      for (_ReorderableItemState item in _items.values) {
+      for (ReorderableItemState item in _items.values) {
         if (item.key == _dragging) continue;
         final itemTop = _itemOffset(item);
         if (itemTop < draggingTop) continue;
@@ -543,26 +543,26 @@ class _ReorderableListState extends State<ReorderableList>
   bool _scheduledRebuild = false;
   Key? _lastReportedKey;
 
-  final HashMap<Key?, _ReorderableItemState> _items =
-      HashMap<Key, _ReorderableItemState>();
+  final HashMap<Key?, ReorderableItemState> _items =
+      HashMap<Key, ReorderableItemState>();
 
-  void registerItem(_ReorderableItemState item) {
+  void registerItem(ReorderableItemState item) {
     _items[item.key] = item;
   }
 
-  void unregisterItem(_ReorderableItemState item) {
+  void unregisterItem(ReorderableItemState item) {
     if (_items[item.key] == item) _items.remove(item.key);
   }
 
-  double _itemOffset(_ReorderableItemState item) {
+  double _itemOffset(ReorderableItemState item) {
     final topRenderBox = context.findRenderObject() as RenderBox;
     return (item.context.findRenderObject() as RenderBox)
         .localToGlobal(Offset.zero, ancestor: topRenderBox)
         .dy;
   }
 
-  static _ReorderableListState? of(BuildContext context) {
-    return context.findAncestorStateOfType<_ReorderableListState>();
+  static ReorderableListState? of(BuildContext context) {
+    return context.findAncestorStateOfType<ReorderableListState>();
   }
 
   //
@@ -612,7 +612,7 @@ class _ReorderableListState extends State<ReorderableList>
   AnimationController? _finalAnimation;
 }
 
-class _ReorderableItemState extends State<ReorderableItem> {
+class ReorderableItemState extends State<ReorderableItem> {
   get key => widget.key;
 
   @override
@@ -622,7 +622,7 @@ class _ReorderableItemState extends State<ReorderableItem> {
     if (widget.listKey != null) {
       _listState = widget.listKey!.currentState;
     } else {
-      _listState = _ReorderableListState.of(context);
+      _listState = ReorderableListState.of(context);
     }
 
     _listState!.registerItem(this);
@@ -633,8 +633,8 @@ class _ReorderableItemState extends State<ReorderableItem> {
       child: widget.childBuilder(
           context,
           dragging
-              ? ReorderableItemState.placeholder
-              : ReorderableItemState.normal),
+              ? ReorderableItemDisplayState.placeholder
+              : ReorderableItemDisplayState.normal),
     );
   }
 
@@ -645,7 +645,7 @@ class _ReorderableItemState extends State<ReorderableItem> {
     if (widget.listKey != null) {
       _listState = widget.listKey!.currentState;
     } else {
-      _listState = _ReorderableListState.of(context);
+      _listState = ReorderableListState.of(context);
     }
 
     if (_listState!.dragging == this.key) {
@@ -666,7 +666,7 @@ class _ReorderableItemState extends State<ReorderableItem> {
     super.deactivate();
   }
 
-  _ReorderableListState? _listState;
+  ReorderableListState? _listState;
 }
 
 class _DragProxy extends StatefulWidget {
@@ -690,7 +690,7 @@ class _DragProxyState extends State<_DragProxy> {
     setState(() {
       _decorationOpacity = 1.0;
       _widget = widget;
-      final state = _ReorderableListState.of(context)!;
+      final state = ReorderableListState.of(context)!;
       RenderBox renderBox = state.context.findRenderObject() as RenderBox;
       final offset = position.localToGlobal(Offset.zero, ancestor: renderBox);
       _offsetX = offset.dx;
@@ -729,7 +729,7 @@ class _DragProxyState extends State<_DragProxy> {
 
   @override
   Widget build(BuildContext context) {
-    final state = _ReorderableListState.of(context)!;
+    final state = ReorderableListState.of(context)!;
     state._dragProxy = this;
 
     if (_widget != null) {
@@ -757,7 +757,7 @@ class _DragProxyState extends State<_DragProxy> {
 
   @override
   void deactivate() {
-    _ReorderableListState.of(context)?._dragProxy = null;
+    ReorderableListState.of(context)?._dragProxy = null;
     super.deactivate();
   }
 }
