@@ -370,7 +370,7 @@ class _ReorderableListState extends State<ReorderableList>
     if (_scrolling) {
       var prevDragging = _dragging;
       _dragging = null;
-      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         _dragging = prevDragging;
         end(details);
       });
@@ -378,7 +378,7 @@ class _ReorderableListState extends State<ReorderableList>
     }
 
     if (_scheduledRebuild) {
-      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         if (mounted) end(details);
       });
       return;
@@ -498,7 +498,7 @@ class _ReorderableListState extends State<ReorderableList>
     if (closest != null &&
         closest.key != _dragging &&
         closest.key != _lastReportedKey) {
-      SchedulerBinding.instance!.addPostFrameCallback((Duration timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
         _scheduledRebuild = false;
       });
       _scheduledRebuild = true;
