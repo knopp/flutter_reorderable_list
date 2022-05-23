@@ -31,3 +31,7 @@
 ## [1.2.0]
 
 * Migration to Flutter 2.8
+
+## [1.3.0]
+
+* Migration to Flutter 3.0
