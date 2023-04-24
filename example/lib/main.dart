@@ -219,7 +219,7 @@ class Item extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         vertical: 14.0, horizontal: 14.0),
                     child: Text(data.title,
-                        style: Theme.of(context).textTheme.subtitle1),
+                        style: Theme.of(context).textTheme.titleMedium),
                   )),
                   // Triggers the reordering
                   dragHandle,
