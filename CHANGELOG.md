@@ -35,3 +35,7 @@
 ## [1.3.0]
 
 * Migration to Flutter 3.0
+
+## [1.3.1]
+
+* Fix compatibility with latest Dart SDK
