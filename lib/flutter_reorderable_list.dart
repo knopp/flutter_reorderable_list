@@ -185,7 +185,8 @@ class DelayedReorderableListener extends ReorderableListener {
 }
 
 class _ReorderableListState extends State<ReorderableList>
-    with TickerProviderStateMixin, Drag {
+    with TickerProviderStateMixin
+    implements Drag {
   @override
   Widget build(BuildContext context) {
     return Stack(
