@@ -228,7 +228,7 @@ class _ReorderableListState extends State<ReorderableList>
       _dragging = null;
       _dragProxy!.hide();
 
-      var current = _items[_dragging];
+      var current = _items[dragging];
       current?.update();
 
       if (widget.onReorderDone != null) {
