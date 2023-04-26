@@ -113,9 +113,12 @@ class ReorderableListener extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (PointerEvent event) => _routePointer(event, context),
-      child: child,
+    return MouseRegion(
+      cursor: SystemMouseCursors.grab,
+      child: Listener(
+        onPointerDown: (PointerEvent event) => _routePointer(event, context),
+        child: child,
+      ),
     );
   }
 
@@ -718,7 +721,10 @@ class _DragProxyState extends State<_DragProxy> {
       final decoratedPlaceholder =
           widget.decoratePlaceholder(w, _decorationOpacity);
       return Positioned(
-        child: decoratedPlaceholder.widget,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.grabbing,
+          child: decoratedPlaceholder.widget,
+        ),
         left: _offsetX,
         width: _size.width,
         top: offset - decoratedPlaceholder.offset,
