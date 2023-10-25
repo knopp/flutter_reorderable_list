@@ -388,7 +388,10 @@ class _ReorderableListState extends State<ReorderableList>
     this._scrollable!.position.removeListener(this._scrolled);
 
     var current = _items[_dragging];
-    if (current == null) return;
+    if (current == null) {
+      _cancel();
+      return;
+    }
 
     final originalOffset = _itemOffset(current);
     final dragProxyOffset = _dragProxy!.offset;
